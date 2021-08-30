@@ -29,6 +29,7 @@
 #endif
 
 #include "composite_handler.h"
+#include "param_handler.h"
 
 #include <rcsc/gz.h>
 #include <rcsc/rcg.h>
@@ -67,6 +68,7 @@ main( int argc, char **argv )
 
     //std::ofstream fout( argv[2] );
     CompositeHandler handler;
+    handler.add( CompositeHandler::Ptr( new ParamHandler() ) );
 
     parser->parse( fin, handler );
 
