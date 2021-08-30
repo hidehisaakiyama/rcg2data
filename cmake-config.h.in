@@ -1,6 +1,6 @@
 
-#define PACKAGE_NAME "rcgaction"
+#define PACKAGE_NAME "rcg2data"
 
-#define VERSION @rcgaction_VERSION@
+#define VERSION @rcg2data_VERSION@
 
 #cmakedefine HAVE_LIBZ
