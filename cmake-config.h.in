@@ -1,0 +1,6 @@
+
+#define PACKAGE_NAME "rcgaction"
+
+#define VERSION @rcgaction_VERSION@
+
+#cmakedefine HAVE_LIBZ
