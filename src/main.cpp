@@ -30,6 +30,7 @@
 
 #include "composite_handler.h"
 #include "param_handler.h"
+#include "shoot_handler.h"
 
 #include <rcsc/gz.h>
 #include <rcsc/rcg.h>
@@ -41,11 +42,11 @@
 int
 main( int argc, char **argv )
 {
-    if ( argc != 3
+    if ( argc != 2
          || ! std::strncmp( argv[1], "--help", 6 )
          || ! std::strncmp( argv[1], "-h", 2 ) )
     {
-        std::cerr << "usage: " << argv[0] << " <RCGFile>[.gz] <CSVFile>" << std::endl;
+        std::cerr << "usage: " << argv[0] << " <RCGFile>[.gz] [<CSVFile>]" << std::endl;
         return 0;
     }
 
@@ -69,6 +70,7 @@ main( int argc, char **argv )
     //std::ofstream fout( argv[2] );
     CompositeHandler handler;
     handler.add( CompositeHandler::Ptr( new ParamHandler() ) );
+    handler.add( CompositeHandler::Ptr( new ShootHandler() ) );
 
     parser->parse( fin, handler );
 

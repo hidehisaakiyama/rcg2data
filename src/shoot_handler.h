@@ -28,10 +28,20 @@
 #define SHOOT_HANDLER_H
 
 #include <rcsc/rcg/handler.h>
+#include <rcsc/geom/vector_2d.h>
 
 class ShootHandler
     : public rcsc::rcg::Handler {
 private:
+
+    struct Kick {
+        int time_;
+        int unum_;
+        Vector2D kicked_pos_;
+    };
+
+    std::vector< Kick > M_left_kicks;
+    std::vector< Kick > M_right_kicks;
 
 public:
 
