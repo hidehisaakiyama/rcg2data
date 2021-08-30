@@ -24,19 +24,19 @@
 
 /////////////////////////////////////////////////////////////////////
 
-#ifndef PARAM_HANDLER_H
-#define PARAM_HANDLER_H
+#ifndef SHOOT_HANDLER_H
+#define SHOOT_HANDLER_H
 
 #include <rcsc/rcg/handler.h>
 
-class ParamHandler
+class ShootHandler
     : public rcsc::rcg::Handler {
 private:
 
 public:
 
-    ParamHandler() = default;
-    ~ParamHandler() = default;
+    ShootHandler() = default;
+    ~ShootHandler() = default;
 
     virtual
     bool handleEOF();
