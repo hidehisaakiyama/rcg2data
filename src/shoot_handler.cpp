@@ -40,6 +40,7 @@
 using namespace rcsc;
 using namespace rcsc::rcg;
 
+#if 0
 namespace {
 
 bool
@@ -59,6 +60,7 @@ check_ball_is_moving_to_goal( const Vector2D & goal_left,
 }
 
 }
+#endif
 
 /*-------------------------------------------------------------------*/
 /*!

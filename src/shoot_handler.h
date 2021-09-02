@@ -30,6 +30,8 @@
 #include <rcsc/rcg/handler.h>
 #include <rcsc/geom/vector_2d.h>
 
+#include <vector>
+
 class ShootHandler
     : public rcsc::rcg::Handler {
 private:
@@ -37,7 +39,7 @@ private:
     struct Kick {
         int time_;
         int unum_;
-        Vector2D kicked_pos_;
+        rcsc::Vector2D kicked_pos_;
     };
 
     std::vector< Kick > M_left_kicks;
