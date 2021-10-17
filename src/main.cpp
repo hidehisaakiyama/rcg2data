@@ -45,7 +45,7 @@ int
 main( int argc, char **argv )
 {
     std::cout << "******************************************************************\n"
-              << " " PACKAGE_NAME " " << VERSION << "\n"
+              << " " PACKAGE_NAME " " VERSION "\n"
               << " Copyright: (C) 2021- Hidehisa Akiyama\n"
               << " All rights reserved.\n"
               << "******************************************************************\n"
@@ -74,7 +74,6 @@ main( int argc, char **argv )
         return 1;
     }
 
-    //std::ofstream fout( argv[2] );
     CompositeHandler handler;
     handler.add( CompositeHandler::Ptr( new ParamHandler() ) );
     handler.add( CompositeHandler::Ptr( new ShootHandler() ) );

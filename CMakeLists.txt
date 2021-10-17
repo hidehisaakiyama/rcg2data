@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.5)
 # The version number will be written in config.h.
 #
 project(rcg2data
-  VERSION 2021.10)
+  VERSION "2021.10")
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
