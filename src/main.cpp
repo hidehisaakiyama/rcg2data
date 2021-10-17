@@ -51,7 +51,7 @@ main( int argc, char **argv )
               << "******************************************************************\n"
               << std::endl;
 
-    if ( Options::instance().parse( argc, argv ) )
+    if ( ! Options::instance().parse( argc, argv ) )
     {
         return 1;
     }
@@ -65,6 +65,9 @@ main( int argc, char **argv )
                   << ']' << std::endl;
         return 1;
     }
+
+    std::cerr << "Start parsing : [" << Options::instance().gameLogFilePath()
+              << "]" << std::endl;
 
     rcsc::rcg::Parser::Ptr parser = rcsc::rcg::Parser::create( fin );
 
