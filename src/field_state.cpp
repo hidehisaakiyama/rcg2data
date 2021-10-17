@@ -1,10 +1,5 @@
 // -*-c++-*-
 
-/*!
-  \file game_analyer.cpp
-  \brief game analyzer Source File
-*/
-
 /*
  *Copyright:
 
@@ -33,56 +28,39 @@
 #include <config.h>
 #endif
 
-#include "game_analyzer.h"
-
-#include "param_handler.h"
-#include "shoot_handler.h"
-
-#include <rcsc/gz.h>
-#include <rcsc/rcg/parser.h>
+#include "field_state.h"
 
 using namespace rcsc;
 
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
-GameAnalyzer::GameAnalyzer()
+ */
+FieldState::FieldState()
+    : M_time( -1, 0 ),
+      M_game_mode(),
+      M_ball_owner_side( NEUTRAL )
 {
-    M_worldmodel.init( "", NEUTRAL, 999 );
-
-    M_handlers.add( CompositeHandler::Ptr( new ParamHandler() ) );
-    M_handlers.add( CompositeHandler::Ptr( new ShootHandler() ) );
+    M_all_players.reserve( 22 );
+    M_left_players.reserve( 11 );
+    M_right_players.reserve( 11 );
+    std::fill( M_left_players_array, M_left_players_array + 11, nullptr );
+    std::fill( M_right_players_array, M_right_players_array + 11, nullptr );
 }
 
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
-bool
-GameAnalyzer::analyze( const std::string & filepath )
+ */
+FieldState::~FieldState()
 {
-    rcsc::gzifstream fin( filepath.c_str() );
-
-    if ( ! fin.is_open() )
+    for ( CoachPlayerObject::Cont::iterator p = M_all_players.begin(), end = M_all_players.end();
+          p != end;
+          ++p )
     {
-        std::cerr << "ERROR: Could not open the file [" << filepath << ']' << std::endl;
-        return false;
+        delete *p;
+        *p = nullptr;
     }
 
-    std::cerr << "Start analyzing : [" << filepath << "]" << std::endl;
-
-    rcsc::rcg::Parser::Ptr parser = rcsc::rcg::Parser::create( fin );
-
-    if ( ! parser )
-    {
-        std::cerr << "ERROR: Could not create an rcg parser." << std::endl;
-        return false;
-    }
-
-    parser->parse( fin, M_handlers );
-
-    std::cerr << "Finished : [" << filepath << "]" << std::endl;
-
-    return true;
+    M_all_players.clear();
 }

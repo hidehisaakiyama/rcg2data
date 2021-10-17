@@ -2,6 +2,7 @@
 add_executable(rcg2data
   main.cpp
   options.cpp
+  field_state.cpp
   game_analyzer.cpp
   composite_handler.cpp
   param_handler.cpp
