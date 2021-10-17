@@ -115,7 +115,7 @@ ParamHandler::handleServerParam( const std::string & msg )
         return false;
     }
 
-    std::cout << "server_param" << std::endl;
+    // std::cout << "server_param" << std::endl;
 
     return true;
 }
@@ -132,7 +132,7 @@ ParamHandler::handlePlayerParam( const std::string & msg )
         return false;
     }
 
-    std::cout << "player_param" << std::endl;
+    // std::cout << "player_param" << std::endl;
 
     return true;
 }
@@ -155,7 +155,7 @@ ParamHandler::handlePlayerType( const std::string & msg )
 
     PlayerTypeSet::instance().insert( ptype );
 
-    std::cout << "player_type " << ptype.id() << std::endl;
+    // std::cout << "player_type " << ptype.id() << std::endl;
 
     return true;
 }

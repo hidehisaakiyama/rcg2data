@@ -1,6 +1,7 @@
 
 add_executable(rcg2data
   main.cpp
+  options.cpp
   composite_handler.cpp
   param_handler.cpp
   shoot_handler.cpp

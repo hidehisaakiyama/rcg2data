@@ -28,6 +28,8 @@
 #include <config.h>
 #endif
 
+#include "options.h"
+
 #include "composite_handler.h"
 #include "param_handler.h"
 #include "shoot_handler.h"
@@ -42,22 +44,27 @@
 int
 main( int argc, char **argv )
 {
-    if ( argc != 2
-         || ! std::strncmp( argv[1], "--help", 6 )
-         || ! std::strncmp( argv[1], "-h", 2 ) )
-    {
-        std::cerr << "usage: " << argv[0] << " <RCGFile>[.gz] [<CSVFile>]" << std::endl;
-        return 0;
-    }
+    std::cout << "******************************************************************\n"
+              << " " PACKAGE_NAME " " << VERSION << "\n"
+              << " Copyright: (C) 2021- Hidehisa Akiyama\n"
+              << " All rights reserved.\n"
+              << "******************************************************************\n"
+              << std::endl;
 
-    rcsc::gzifstream fin( argv[1] );
-
-    if ( ! fin.is_open() )
+    if ( Options::instance().parse( argc, argv ) )
     {
-        std::cerr << "ERROR: Could not open the file [" << argv[1] << ']' << std::endl;
         return 1;
     }
 
+    rcsc::gzifstream fin( Options::instance().gameLogFilePath().c_str() );
+
+    if ( ! fin.is_open() )
+    {
+        std::cerr << "ERROR: Could not open the file ["
+                  << Options::instance().gameLogFilePath()
+                  << ']' << std::endl;
+        return 1;
+    }
 
     rcsc::rcg::Parser::Ptr parser = rcsc::rcg::Parser::create( fin );
 
