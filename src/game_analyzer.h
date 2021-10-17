@@ -24,36 +24,25 @@
 
 /////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
+#ifndef GAME_ANALYZER_H
+#define GAME_ANALYZER_H
+
+#include "composite_handler.h"
+
+#include <rcsc/coach/coach_world_model.h>
+
+class GameAnalyzer {
+private:
+
+    CompositeHandler M_handlers;
+
+    rcsc::CoachWorldModel M_worldmodel;
+
+public:
+
+    GameAnalyzer();
+
+    bool analyze( const std::string & filepath );
+};
+
 #endif
-
-#include "options.h"
-#include "game_analyzer.h"
-
-#include <iostream>
-
-int
-main( int argc, char **argv )
-{
-    std::cout << "******************************************************************\n"
-              << " " PACKAGE_NAME " " VERSION "\n"
-              << " Copyright: (C) 2021- Hidehisa Akiyama\n"
-              << " All rights reserved.\n"
-              << "******************************************************************\n"
-              << std::endl;
-
-    if ( ! Options::instance().parse( argc, argv ) )
-    {
-        return 1;
-    }
-
-    GameAnalyzer analyzer;
-
-    if ( ! analyzer.analyze( Options::instance().gameLogFilePath() ) )
-    {
-        return 1;
-    }
-
-    return 0;
-}

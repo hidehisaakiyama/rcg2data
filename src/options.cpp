@@ -34,6 +34,7 @@
 #include <rcsc/param/cmd_line_parser.h>
 
 #include <iostream>
+#include <memory>
 
 using namespace rcsc;
 
