@@ -66,13 +66,25 @@ private:
 
 
     // not used
-    FieldState( const FieldState & );
-    const FieldState & operator=( const FieldState & );
+    FieldState() = delete;
+    FieldState( const FieldState & ) = delete;
+    const FieldState & operator=( const FieldState & ) = delete;
 
 public:
 
-    FieldState();
+    FieldState( const rcsc::GameTime & time,
+                const rcsc::GameMode & mode,
+                const rcsc::rcg::ShowInfoT & show );
     ~FieldState();
+
+    const rcsc::GameTime & time() const
+      {
+          return M_time;
+      }
+
+private:
+    void setShowInfo( const rcsc::rcg::ShowInfoT & show );
+
 
 };
 

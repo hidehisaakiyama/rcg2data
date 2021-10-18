@@ -36,6 +36,7 @@
 #include "game_analyzer.h"
 
 #include "param_handler.h"
+#include "disp_handler.h"
 #include "shoot_handler.h"
 
 #include <rcsc/gz.h>
@@ -49,9 +50,8 @@ using namespace rcsc;
 */
 GameAnalyzer::GameAnalyzer()
 {
-    M_worldmodel.init( "", NEUTRAL, 999 );
-
     M_handlers.add( CompositeHandler::Ptr( new ParamHandler() ) );
+    M_handlers.add( CompositeHandler::Ptr( new DispHandler( M_field_model ) ) );
     M_handlers.add( CompositeHandler::Ptr( new ShootHandler() ) );
 }
 

@@ -31,16 +31,21 @@
 #include "field_state.h"
 
 using namespace rcsc;
+using namespace rcsc::rcg;
 
 /*-------------------------------------------------------------------*/
 /*!
 
  */
-FieldState::FieldState()
-    : M_time( -1, 0 ),
-      M_game_mode(),
+FieldState::FieldState( const rcsc::GameTime & time,
+                        const rcsc::GameMode & mode,
+                        const rcsc::rcg::ShowInfoT & show )
+    : M_time( time ),
+      M_game_mode( mode ),
       M_ball_owner_side( NEUTRAL )
 {
+    setShowInfo( show );
+
     M_all_players.reserve( 22 );
     M_left_players.reserve( 11 );
     M_right_players.reserve( 11 );
@@ -63,4 +68,15 @@ FieldState::~FieldState()
     }
 
     M_all_players.clear();
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void
+FieldState::setShowInfo( const ShowInfoT & show )
+{
+    std::cerr << "FieldState::setShowInfo " << show.time_ << std::endl;
+
 }

@@ -28,15 +28,14 @@
 #define GAME_ANALYZER_H
 
 #include "composite_handler.h"
-
-#include <rcsc/coach/coach_world_model.h>
+#include "field_model.h"
 
 class GameAnalyzer {
 private:
 
     CompositeHandler M_handlers;
 
-    rcsc::CoachWorldModel M_worldmodel;
+    FieldModel M_field_model;
 
 public:
 
