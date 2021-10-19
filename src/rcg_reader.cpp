@@ -28,7 +28,7 @@
 #include <config.h>
 #endif
 
-#include "disp_handler.h"
+#include "rcg_reader.h"
 
 #include "field_model.h"
 
@@ -43,7 +43,7 @@ using namespace rcsc::rcg;
 /*!
 
  */
-DispHandler::DispHandler( FieldModel & field_model )
+RCGReader::RCGReader( FieldModel & field_model )
     : M_field_model( field_model ),
       M_playmode( PM_Null ),
       M_left_score( 0 ),
@@ -57,7 +57,26 @@ DispHandler::DispHandler( FieldModel & field_model )
 
  */
 bool
-DispHandler::handleEOF()
+RCGReader::handleLogVersion( const int ver )
+{
+    Handler::handleLogVersion( ver );
+
+    if ( logVersion() <= 3 )
+    {
+        std::cerr << "Unsupported RCG version [" << ver << ']' << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+bool
+RCGReader::handleEOF()
 {
     return true;
 }
@@ -67,7 +86,7 @@ DispHandler::handleEOF()
 
  */
 bool
-DispHandler::handleShow( const ShowInfoT & show )
+RCGReader::handleShow( const ShowInfoT & show )
 {
     M_field_model.updateObjects( show );
 
@@ -79,7 +98,7 @@ DispHandler::handleShow( const ShowInfoT & show )
 
  */
 bool
-DispHandler::handleMsg( const int ,
+RCGReader::handleMsg( const int ,
                         const int ,
                         const std::string & )
 {
@@ -91,7 +110,7 @@ DispHandler::handleMsg( const int ,
 
  */
 bool
-DispHandler::handleDraw( const int ,
+RCGReader::handleDraw( const int ,
                           const drawinfo_t & )
 {
     return true;
@@ -102,7 +121,7 @@ DispHandler::handleDraw( const int ,
 
  */
 bool
-DispHandler::handlePlayMode( const int time,
+RCGReader::handlePlayMode( const int time,
                              const PlayMode pmode )
 {
     M_playmode = pmode;
@@ -118,7 +137,7 @@ DispHandler::handlePlayMode( const int time,
 
  */
 bool
-DispHandler::handleTeam( const int ,
+RCGReader::handleTeam( const int ,
                          const TeamT & team_l,
                          const TeamT & team_r )
 {
@@ -133,8 +152,13 @@ DispHandler::handleTeam( const int ,
 
  */
 bool
-DispHandler::handleServerParam( const std::string & )
+RCGReader::handleServerParam( const std::string & msg )
 {
+    if ( ! ServerParam::instance().parse( msg.c_str(), 999 ) )
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -143,8 +167,13 @@ DispHandler::handleServerParam( const std::string & )
 
  */
 bool
-DispHandler::handlePlayerParam( const std::string & )
+RCGReader::handlePlayerParam( const std::string & msg )
 {
+    if ( ! PlayerParam::instance().parse( msg.c_str(), 999 ) )
+    {
+        return false;
+    }
+
     return true;
 }
 
@@ -154,7 +183,17 @@ DispHandler::handlePlayerParam( const std::string & )
 
  */
 bool
-DispHandler::handlePlayerType( const std::string & )
+RCGReader::handlePlayerType( const std::string & msg )
 {
+    const PlayerType ptype( msg.c_str(), 999 );
+
+    if ( ptype.id() < 0
+         || ptype.id() >= PlayerParam::i().playerTypes() )
+    {
+        return false;
+    }
+
+    PlayerTypeSet::instance().insert( ptype );
+
     return true;
 }

@@ -55,7 +55,7 @@ private:
     rcsc::CoachPlayerObject * M_right_players_array[11];
 
     // players that performed a kick/tackle command successfully (reference)
-    rcsc::CoachPlayerObject::Cont M_kicker_candidates;
+    rcsc::CoachPlayerObject::Cont M_kickers;
 
 
     rcsc::SideID M_ball_owner_side; //!< estimated ball owner team side.
@@ -74,7 +74,8 @@ public:
 
     FieldState( const rcsc::GameTime & time,
                 const rcsc::GameMode & mode,
-                const rcsc::rcg::ShowInfoT & show );
+                const rcsc::rcg::ShowInfoT & show,
+                const ConstPtr & prev_state );
     ~FieldState();
 
     const rcsc::GameTime & time() const
@@ -82,10 +83,30 @@ public:
           return M_time;
       }
 
+    const rcsc::GameMode & gameMode() const
+      {
+          return M_game_mode;
+      }
+
+    const rcsc::CoachBallObject & ball() const
+      {
+          return M_ball;
+      }
+
+    const rcsc::CoachPlayerObject * getPlayer( const rcsc::SideID side,
+                                               const int unum ) const;
+
+    const rcsc::CoachPlayerObject::Cont & kickerCandidates() const
+      {
+          return M_kicker_candidates;
+      }
+
 private:
-    void setShowInfo( const rcsc::rcg::ShowInfoT & show );
-
-
+    void setBall( const rcsc::rcg::BallT & ball,
+                  const ConstPtr & prev_state );
+    void setPlayer( const rcsc::rcg::PlayerT & player,
+                    const ConstPtr & prev_state );
+    void updateKickerCandidates();
 };
 
 #endif

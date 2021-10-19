@@ -35,9 +35,7 @@
 
 #include "game_analyzer.h"
 
-#include "param_handler.h"
-#include "disp_handler.h"
-#include "shoot_handler.h"
+#include "rcg_reader.h"
 
 #include <rcsc/gz.h>
 #include <rcsc/rcg/parser.h>
@@ -50,9 +48,7 @@ using namespace rcsc;
 */
 GameAnalyzer::GameAnalyzer()
 {
-    M_handlers.add( CompositeHandler::Ptr( new ParamHandler() ) );
-    M_handlers.add( CompositeHandler::Ptr( new DispHandler( M_field_model ) ) );
-    M_handlers.add( CompositeHandler::Ptr( new ShootHandler() ) );
+
 }
 
 /*-------------------------------------------------------------------*/
@@ -60,7 +56,7 @@ GameAnalyzer::GameAnalyzer()
 
 */
 bool
-GameAnalyzer::analyze( const std::string & filepath )
+GameAnalyzer::read( const std::string & filepath )
 {
     rcsc::gzifstream fin( filepath.c_str() );
 
@@ -80,9 +76,26 @@ GameAnalyzer::analyze( const std::string & filepath )
         return false;
     }
 
-    parser->parse( fin, M_handlers );
+    std::unique_ptr< rcg::Handler > handler( new RCGReader( M_field_model ) );
+
+    parser->parse( fin, *handler );
 
     std::cerr << "Finished : [" << filepath << "]" << std::endl;
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+*/
+bool
+GameAnalyzer::analyze( const std::string & filepath )
+{
+    if ( ! read( filepath ) )
+    {
+        return false;
+    }
 
     return true;
 }

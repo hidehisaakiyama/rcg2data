@@ -132,6 +132,12 @@ FieldModel::updateObjects( const ShowInfoT & show )
 {
     updateTime( show.time_, true );
 
-    FieldState::Ptr ptr( new FieldState( M_time, M_game_mode, show ) );
+    FieldState::ConstPtr prev_state;
+    if ( ! M_field_states.empty() )
+    {
+        prev_state = M_field_states.back();
+    }
+
+    FieldState::Ptr ptr( new FieldState( M_time, M_game_mode, show, prev_state ) );
     M_field_states.emplace_back( ptr );
 }

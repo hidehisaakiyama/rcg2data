@@ -24,15 +24,15 @@
 
 /////////////////////////////////////////////////////////////////////
 
-#ifndef DISP_HANDLER_H
-#define DISP_HANDLER_H
+#ifndef RCG_READER_H
+#define RCG_READER_H
 
 #include <rcsc/rcg/handler.h>
 #include <rcsc/rcg/types.h>
 
 class FieldModel;
 
-class DispHandler
+class RCGReader
     : public rcsc::rcg::Handler {
 private:
 
@@ -42,11 +42,14 @@ private:
     int M_left_score;
     int M_right_score;
 
-    DispHandler() = delete;
+    RCGReader() = delete;
 public:
 
-    DispHandler( FieldModel & field_model );
-    ~DispHandler() = default;
+    RCGReader( FieldModel & field_model );
+    ~RCGReader() = default;
+
+    virtual
+    bool handleLogVersion( const int ver );
 
     virtual
     bool handleEOF();

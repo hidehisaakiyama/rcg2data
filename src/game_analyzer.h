@@ -27,13 +27,10 @@
 #ifndef GAME_ANALYZER_H
 #define GAME_ANALYZER_H
 
-#include "composite_handler.h"
 #include "field_model.h"
 
 class GameAnalyzer {
 private:
-
-    CompositeHandler M_handlers;
 
     FieldModel M_field_model;
 
@@ -41,6 +38,7 @@ public:
 
     GameAnalyzer();
 
+    bool read( const std::string & filepath );
     bool analyze( const std::string & filepath );
 };
 

@@ -37,20 +37,28 @@ using namespace rcsc::rcg;
 /*!
 
  */
-FieldState::FieldState( const rcsc::GameTime & time,
-                        const rcsc::GameMode & mode,
-                        const rcsc::rcg::ShowInfoT & show )
+FieldState::FieldState( const GameTime & time,
+                        const GameMode & mode,
+                        const ShowInfoT & show,
+                        const ConstPtr & prev_state )
+
     : M_time( time ),
       M_game_mode( mode ),
       M_ball_owner_side( NEUTRAL )
 {
-    setShowInfo( show );
-
     M_all_players.reserve( 22 );
     M_left_players.reserve( 11 );
     M_right_players.reserve( 11 );
     std::fill( M_left_players_array, M_left_players_array + 11, nullptr );
     std::fill( M_right_players_array, M_right_players_array + 11, nullptr );
+
+    setBall( show.ball_, prev_state );
+    for ( int i = 0; i < MAX_PLAYER; ++i )
+    {
+        setPlayer( show.player_[i], prev_state );
+    }
+
+    updateKickerCandidates();
 }
 
 /*-------------------------------------------------------------------*/
@@ -59,12 +67,10 @@ FieldState::FieldState( const rcsc::GameTime & time,
  */
 FieldState::~FieldState()
 {
-    for ( CoachPlayerObject::Cont::iterator p = M_all_players.begin(), end = M_all_players.end();
-          p != end;
-          ++p )
+    for ( auto p : M_all_players )
     {
-        delete *p;
-        *p = nullptr;
+        delete p;
+        p = nullptr;
     }
 
     M_all_players.clear();
@@ -74,9 +80,119 @@ FieldState::~FieldState()
 /*!
 
  */
-void
-FieldState::setShowInfo( const ShowInfoT & show )
+const CoachPlayerObject *
+FieldState::getPlayer( const SideID side,
+                       const int unum ) const
 {
-    std::cerr << "FieldState::setShowInfo " << show.time_ << std::endl;
+    if ( unum < 1 || 11 < unum )
+    {
+        return nullptr;
+    }
 
+    if ( side == LEFT )
+    {
+        return M_left_players_array[unum-1];
+    }
+
+    if ( side == RIGHT )
+    {
+        return M_right_players_array[unum-1];
+    }
+
+    return nullptr;
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void
+FieldState::setBall( const BallT & ball,
+                     const ConstPtr & prev_state )
+{
+    if ( ball.hasVelocity() )
+    {
+        M_ball.setValue( ball.x(), ball.y(), ball.deltaX(), ball.deltaY() );
+    }
+    else
+    {
+        double vx = 0.0;
+        double vy = 0.0;
+        if ( prev_state )
+        {
+            vx = prev_state->ball().pos().x - ball.x();
+            vy = prev_state->ball().pos().y - ball.y();
+        }
+
+        M_ball.setValue( ball.x(), ball.y(), vx, vy );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void
+FieldState::setPlayer( const PlayerT & player,
+                       const ConstPtr & prev_state )
+{
+    if ( ! player.isAlive() )
+    {
+        return;
+    }
+
+    CoachPlayerObject * p = nullptr;
+
+    if ( prev_state )
+    {
+        const CoachPlayerObject * pp = prev_state->getPlayer( player.side(), player.unum() );
+        if ( pp )
+        {
+            p = pp->clone();
+            p->update( player );
+        }
+    }
+
+    if ( ! p )
+    {
+        p = new CoachPlayerObject();
+        p->update( player );
+    }
+
+    M_all_players.push_back( p );
+
+    if ( p->side() == LEFT )
+    {
+        M_left_players.push_back( p );
+        if ( 1 <= p->unum() && p->unum() <= 11 )
+        {
+            M_left_players_array[p->unum() - 1] = p;
+        }
+    }
+    else if ( p->side() == RIGHT )
+    {
+        M_right_players.push_back( p );
+        if ( 1 <= p->unum() && p->unum() <= 11 )
+        {
+            M_right_players_array[p->unum() - 1] = p;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void
+FieldState::updateKickerCandidates()
+{
+    for ( const auto & p : M_all_players )
+    {
+        if ( p->isKicking()
+            //&& p->tackleCycle() == 1 TODO: check tackle(not tackle_fault) status
+             )
+        {
+            M_kickers.push_back( p );
+        }
+    }
 }
