@@ -28,11 +28,14 @@
 #define GAME_ANALYZER_H
 
 #include "field_model.h"
+#include "shoot.h"
 
 class GameAnalyzer {
 private:
 
     FieldModel M_field_model;
+
+    std::vector< Shoot::Ptr > M_shoot_events;
 
 public:
 
@@ -40,6 +43,13 @@ public:
 
     bool read( const std::string & filepath );
     bool analyze( const std::string & filepath );
+
+    bool print() const;
+
+private:
+
+    void analyzeShoot();
+    bool printShoot() const;
 };
 
 #endif

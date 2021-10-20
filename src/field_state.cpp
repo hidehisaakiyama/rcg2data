@@ -43,8 +43,7 @@ FieldState::FieldState( const GameTime & time,
                         const ConstPtr & prev_state )
 
     : M_time( time ),
-      M_game_mode( mode ),
-      M_ball_owner_side( NEUTRAL )
+      M_game_mode( mode )
 {
     M_all_players.reserve( 22 );
     M_left_players.reserve( 11 );
@@ -53,12 +52,12 @@ FieldState::FieldState( const GameTime & time,
     std::fill( M_right_players_array, M_right_players_array + 11, nullptr );
 
     setBall( show.ball_, prev_state );
-    for ( int i = 0; i < MAX_PLAYER; ++i )
+    for ( int i = 0; i < MAX_PLAYER*2; ++i )
     {
         setPlayer( show.player_[i], prev_state );
     }
 
-    updateKickerCandidates();
+    updateKickers();
 }
 
 /*-------------------------------------------------------------------*/
@@ -184,13 +183,12 @@ FieldState::setPlayer( const PlayerT & player,
 
  */
 void
-FieldState::updateKickerCandidates()
+FieldState::updateKickers()
 {
     for ( const auto & p : M_all_players )
     {
         if ( p->isKicking()
-            //&& p->tackleCycle() == 1 TODO: check tackle(not tackle_fault) status
-             )
+             || p->tackleCycle() == 1 )
         {
             M_kickers.push_back( p );
         }

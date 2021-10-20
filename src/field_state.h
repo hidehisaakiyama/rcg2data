@@ -57,9 +57,8 @@ private:
     // players that performed a kick/tackle command successfully (reference)
     rcsc::CoachPlayerObject::Cont M_kickers;
 
-
-    rcsc::SideID M_ball_owner_side; //!< estimated ball owner team side.
-    const rcsc::CoachPlayerObject * M_ball_owner; // estimated current ball owner
+    //rcsc::SideID M_ball_owner_side; //!< estimated ball owner team side.
+    //const rcsc::CoachPlayerObject * M_ball_owner; // estimated current ball owner
     //const rcsc::CoachPlayerObject * M_fastest_intercept_player; // estimated next ball owner
     //const rcsc::CoachPlayerObject * M_fastest_intercept_teammate;
     //const rcsc::CoachPlayerObject * M_fastest_intercept_opponent;
@@ -93,12 +92,17 @@ public:
           return M_ball;
       }
 
+    const rcsc::CoachPlayerObject::Cont & allPlayers() const
+      {
+          return M_all_players;
+      }
+
     const rcsc::CoachPlayerObject * getPlayer( const rcsc::SideID side,
                                                const int unum ) const;
 
-    const rcsc::CoachPlayerObject::Cont & kickerCandidates() const
+    const rcsc::CoachPlayerObject::Cont & kickers() const
       {
-          return M_kicker_candidates;
+          return M_kickers;
       }
 
 private:
@@ -106,7 +110,7 @@ private:
                   const ConstPtr & prev_state );
     void setPlayer( const rcsc::rcg::PlayerT & player,
                     const ConstPtr & prev_state );
-    void updateKickerCandidates();
+    void updateKickers();
 };
 
 #endif
