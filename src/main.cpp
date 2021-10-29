@@ -30,6 +30,10 @@
 
 #include "options.h"
 #include "game_analyzer.h"
+#include "rcg_reader.h"
+
+#include <rcsc/gz.h>
+#include <rcsc/rcg/parser.h>
 
 #include <iostream>
 
@@ -48,14 +52,40 @@ main( int argc, char **argv )
         return 1;
     }
 
-    GameAnalyzer analyzer;
+    const std::string filepath = Options::instance().gameLogFilePath();
 
-    if ( ! analyzer.analyze( Options::instance().gameLogFilePath() ) )
+    rcsc::gzifstream fin( filepath.c_str() );
+    if ( ! fin.is_open() )
+    {
+        std::cerr << "ERROR: Could not open the file [" << filepath << ']' << std::endl;
+        return 1;
+    }
+
+    rcsc::rcg::Parser::Ptr parser = rcsc::rcg::Parser::create( fin );
+    if ( ! parser )
+    {
+        std::cerr << "ERROR: Could not create an rcg parser." << std::endl;
+        return 1;
+    }
+
+    FieldModel field_model;
+    RCGReader reader( field_model );
+
+    std::cerr << "parsing ... [" << filepath << "]" << std::endl;
+    if ( ! parser->parse( fin, reader ) )
     {
         return 1;
     }
 
-    analyzer.print();
+    GameAnalyzer analyzer;
+
+    std::cerr << "analyzing ... [" << filepath << "]" << std::endl;
+    if ( ! analyzer.analyze( field_model ) )
+    {
+        return 1;
+    }
+
+    analyzer.print( field_model );
 
     return 0;
 }

@@ -35,11 +35,7 @@
 
 #include "game_analyzer.h"
 
-#include "rcg_reader.h"
 #include "shoot.h"
-
-#include <rcsc/gz.h>
-#include <rcsc/rcg/parser.h>
 
 using namespace rcsc;
 
@@ -57,48 +53,9 @@ GameAnalyzer::GameAnalyzer()
 
 */
 bool
-GameAnalyzer::read( const std::string & filepath )
+GameAnalyzer::analyze( const FieldModel & model )
 {
-    rcsc::gzifstream fin( filepath.c_str() );
-
-    if ( ! fin.is_open() )
-    {
-        std::cerr << "ERROR: Could not open the file [" << filepath << ']' << std::endl;
-        return false;
-    }
-
-    std::cerr << "Start analyzing : [" << filepath << "]" << std::endl;
-
-    rcsc::rcg::Parser::Ptr parser = rcsc::rcg::Parser::create( fin );
-
-    if ( ! parser )
-    {
-        std::cerr << "ERROR: Could not create an rcg parser." << std::endl;
-        return false;
-    }
-
-    std::unique_ptr< rcg::Handler > handler( new RCGReader( M_field_model ) );
-
-    parser->parse( fin, *handler );
-
-    std::cerr << "Finished : [" << filepath << "]" << std::endl;
-
-    return true;
-}
-
-/*-------------------------------------------------------------------*/
-/*!
-
-*/
-bool
-GameAnalyzer::analyze( const std::string & filepath )
-{
-    if ( ! read( filepath ) )
-    {
-        return false;
-    }
-
-    analyzeShoot();
+    analyzeShoot( model );
 
     return true;
 }
@@ -108,9 +65,9 @@ GameAnalyzer::analyze( const std::string & filepath )
 
 */
 void
-GameAnalyzer::analyzeShoot()
+GameAnalyzer::analyzeShoot( const FieldModel & model )
 {
-    const std::vector< FieldState::Ptr > & states = M_field_model.fieldStates();
+    const std::vector< FieldState::Ptr > & states = model.fieldStates();
     const size_t max_states = states.size();
 
     GameMode mode;
@@ -175,9 +132,9 @@ GameAnalyzer::analyzeShoot()
 
 */
 bool
-GameAnalyzer::print() const
+GameAnalyzer::print( const FieldModel & model ) const
 {
-    printShoot();
+    printShoot( model );
     return true;
 }
 
@@ -187,10 +144,10 @@ GameAnalyzer::print() const
 
 */
 bool
-GameAnalyzer::printShoot() const
+GameAnalyzer::printShoot( const FieldModel & model ) const
 {
-    const std::string team_l = M_field_model.leftTeamName();
-    const std::string team_r = M_field_model.rightTeamName();
+    const std::string team_l = model.leftTeamName();
+    const std::string team_r = model.rightTeamName();
 
     std::cout << "Shoot,"
               << "TeamName,"

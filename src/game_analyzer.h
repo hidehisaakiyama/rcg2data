@@ -33,23 +33,20 @@
 class GameAnalyzer {
 private:
 
-    FieldModel M_field_model;
-
     std::vector< ActionEvent::Ptr > M_shoot_events;
 
 public:
 
     GameAnalyzer();
 
-    bool read( const std::string & filepath );
-    bool analyze( const std::string & filepath );
+    bool analyze( const FieldModel & model );
 
-    bool print() const;
+    bool print( const FieldModel & model ) const;
 
 private:
 
-    void analyzeShoot();
-    bool printShoot() const;
+    void analyzeShoot( const FieldModel & model );
+    bool printShoot( const FieldModel & model ) const;
 };
 
 #endif
