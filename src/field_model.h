@@ -54,7 +54,7 @@ public:
     ~FieldModel();
 
     const std::string leftTeamName() const { return M_left_team_name; }
-    const std::string rightTeamName() const { return M_left_team_name; }
+    const std::string rightTeamName() const { return M_right_team_name; }
     const std::vector< FieldState::Ptr > & fieldStates() const { return M_field_states; }
 
     void updateTeamNames( const std::string & team_l,

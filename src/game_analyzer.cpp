@@ -189,7 +189,11 @@ GameAnalyzer::print() const
 bool
 GameAnalyzer::printShoot() const
 {
+    const std::string team_l = M_field_model.leftTeamName();
+    const std::string team_r = M_field_model.rightTeamName();
+
     std::cout << "Shoot,"
+              << "TeamName,"
               << "Side,"
               << "Kicker,"
               << "StartTime,"
@@ -201,6 +205,7 @@ GameAnalyzer::printShoot() const
     for ( const auto & i : M_shoot_events )
     {
         std::cout << "Shoot,"
+                  << ( i->playerSide() == LEFT ? team_l : team_r ) << ','
                   << side_char( i->playerSide() ) << ','
                   << i->playerUnum() << ','
                   << i->startTime().cycle() << ','
