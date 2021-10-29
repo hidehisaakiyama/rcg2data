@@ -27,27 +27,17 @@
 #ifndef SHOOT_H
 #define SHOOT_H
 
+#include "action_event.h"
+
 #include <rcsc/geom/vector_2d.h>
 #include <rcsc/game_time.h>
 #include <rcsc/types.h>
 
 #include <memory>
 
-class Shoot {
-public:
-
-    typedef std::shared_ptr< Shoot > Ptr;
-
+class Shoot
+    : public ActionEvent {
 private:
-
-    rcsc::SideID M_kicker_side;
-    int M_kicker_unum;
-
-    rcsc::GameTime M_start_time;
-    rcsc::Vector2D M_start_pos;
-
-    rcsc::GameTime M_end_time;
-    rcsc::Vector2D M_end_pos;
 
 public:
 
@@ -56,15 +46,10 @@ public:
            const rcsc::GameTime & start_time,
            const rcsc::Vector2D & start_pos,
            const rcsc::GameTime & end_time,
-           const rcsc::Vector2D & end_pos );
+           const rcsc::Vector2D & end_pos,
+           const bool success );
 
-    rcsc::SideID kickerSide() const { return M_kicker_side; }
-    int kickerUnum() const { return M_kicker_unum; }
-    const rcsc::GameTime & startTime() const { return M_start_time; }
-    const rcsc::Vector2D & startPos() const { return M_start_pos; }
-    const rcsc::GameTime & endTime() const { return M_end_time; }
-    const rcsc::Vector2D & endPos() const { return M_end_pos; }
-
+    const char * actionName() const;
 };
 
 #endif

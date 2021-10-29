@@ -2,6 +2,7 @@
 add_executable(rcg2data
   main.cpp
   options.cpp
+  action_event.cpp
   field_model.cpp
   field_state.cpp
   game_analyzer.cpp
@@ -28,3 +29,8 @@ set_target_properties(rcg2data
   PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src
   )
+
+install(TARGETS
+  rcg2data
+  RUNTIME
+  DESTINATION ${CMAKE_INSTALL_BINDIR})

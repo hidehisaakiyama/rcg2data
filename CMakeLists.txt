@@ -20,6 +20,13 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 set(CMAKE_CXX_FLAGS "-W -Wall")
 
+# install destination
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local" CACHE PATH "Install destination path" FORCE)
+endif()
+
+include(GNUInstallDirs)
+
 #
 # check librcsc
 #

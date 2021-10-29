@@ -28,14 +28,14 @@
 #define GAME_ANALYZER_H
 
 #include "field_model.h"
-#include "shoot.h"
+#include "action_event.h"
 
 class GameAnalyzer {
 private:
 
     FieldModel M_field_model;
 
-    std::vector< Shoot::Ptr > M_shoot_events;
+    std::vector< ActionEvent::Ptr > M_shoot_events;
 
 public:
 

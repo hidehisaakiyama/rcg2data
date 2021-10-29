@@ -36,6 +36,7 @@
 #include "game_analyzer.h"
 
 #include "rcg_reader.h"
+#include "shoot.h"
 
 #include <rcsc/gz.h>
 #include <rcsc/rcg/parser.h>
@@ -160,7 +161,7 @@ GameAnalyzer::analyzeShoot()
             if ( kicker_side != NEUTRAL
                  && start_pos.isValid() )
             {
-                Shoot::Ptr ptr( new Shoot( kicker_side, kicker_unum, start_time, start_pos, end_time, end_pos ) );
+                ActionEvent::Ptr ptr( new Shoot( kicker_side, kicker_unum, start_time, start_pos, end_time, end_pos, true ) );
                 M_shoot_events.emplace_back( ptr );
             }
         }
@@ -200,8 +201,8 @@ GameAnalyzer::printShoot() const
     for ( const auto & i : M_shoot_events )
     {
         std::cout << "Shoot,"
-                  << side_char( i->kickerSide() ) << ','
-                  << i->kickerUnum() << ','
+                  << side_char( i->playerSide() ) << ','
+                  << i->playerUnum() << ','
                   << i->startTime().cycle() << ','
                   << i->startPos().x << ','
                   << i->startPos().y << ','

@@ -22,13 +22,13 @@
  *EndCopyright:
  */
 
-//////////F///////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "shoot.h"
+#include "action_event.h"
 
 using namespace rcsc;
 
@@ -36,28 +36,22 @@ using namespace rcsc;
 /*!
 
  */
-Shoot::Shoot( const SideID kicker_side,
-              const int kicker_unum,
-              const GameTime & start_time,
-              const Vector2D & start_pos,
-              const GameTime & end_time,
-              const Vector2D & end_pos,
-              const bool success )
-    : ActionEvent( ActionEvent::Shoot,
-                   kicker_side, kicker_unum,
-                   start_time, start_pos,
-                   end_time, end_pos,
-                   success )
+ActionEvent::ActionEvent( const Type action_type,
+                          const SideID player_side,
+                          const int player_unum,
+                          const GameTime & start_time,
+                          const Vector2D & start_pos,
+                          const GameTime & end_time,
+                          const Vector2D & end_pos,
+                          const bool success )
+    : M_action_type( action_type ),
+      M_player_side( player_side ),
+      M_player_unum( player_unum ),
+      M_start_time( start_time ),
+      M_start_pos( start_pos ),
+      M_end_time( end_time ),
+      M_end_pos( end_pos ),
+      M_success( success )
 {
 
-}
-
-/*-------------------------------------------------------------------*/
-/*!
-
- */
-const char *
-Shoot::actionName() const
-{
-    return "Shoot";
 }
