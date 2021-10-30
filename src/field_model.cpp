@@ -128,7 +128,7 @@ FieldModel::updateScore( const int score_l,
 
  */
 void
-FieldModel::updateObjects( const ShowInfoT & show )
+FieldModel::setNewState( const ShowInfoT & show )
 {
     updateTime( show.time_, true );
 

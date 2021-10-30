@@ -43,8 +43,12 @@ FieldState::FieldState( const GameTime & time,
                         const ConstPtr & prev_state )
 
     : M_time( time ),
-      M_game_mode( mode )
+      M_game_mode( mode ),
+      M_score_left( 0 ),
+      M_score_right( 0 )
 {
+    setScore( mode.scoreLeft(), mode.scoreRight() );
+
     M_all_players.reserve( 22 );
     M_left_players.reserve( 11 );
     M_right_players.reserve( 11 );
@@ -57,7 +61,7 @@ FieldState::FieldState( const GameTime & time,
         setPlayer( show.player_[i], prev_state );
     }
 
-    updateKickers();
+    setKickers();
 }
 
 /*-------------------------------------------------------------------*/
@@ -99,6 +103,18 @@ FieldState::getPlayer( const SideID side,
     }
 
     return nullptr;
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void
+FieldState::setScore( const int score_left,
+                      const int score_right )
+{
+    M_score_left = score_left;
+    M_score_right = score_right;
 }
 
 /*-------------------------------------------------------------------*/
@@ -183,7 +199,7 @@ FieldState::setPlayer( const PlayerT & player,
 
  */
 void
-FieldState::updateKickers()
+FieldState::setKickers()
 {
     for ( const auto & p : M_all_players )
     {

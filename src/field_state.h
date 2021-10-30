@@ -43,6 +43,10 @@ private:
 
     rcsc::GameTime M_time;
     rcsc::GameMode M_game_mode;
+    int M_score_left;
+    int M_score_right;
+
+    // TODO: penalty kick state
 
     rcsc::CoachBallObject M_ball;
     rcsc::CoachPlayerObject::Cont M_all_players; // instance
@@ -87,6 +91,9 @@ public:
           return M_game_mode;
       }
 
+    int scoreLeft() const { return M_score_left; }
+    int scoreRight() const { return M_score_right; }
+
     const rcsc::CoachBallObject & ball() const
       {
           return M_ball;
@@ -106,11 +113,13 @@ public:
       }
 
 private:
+    void setScore( const int score_left,
+                   const int score_right );
     void setBall( const rcsc::rcg::BallT & ball,
                   const ConstPtr & prev_state );
     void setPlayer( const rcsc::rcg::PlayerT & player,
                     const ConstPtr & prev_state );
-    void updateKickers();
+    void setKickers();
 };
 
 #endif
