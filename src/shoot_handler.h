@@ -27,62 +27,15 @@
 #ifndef SHOOT_HANDLER_H
 #define SHOOT_HANDLER_H
 
-#include <rcsc/rcg/handler.h>
-#include <rcsc/geom/vector_2d.h>
+#include "field_model.h"
 
 #include <vector>
 
-class ShootHandler
-    : public rcsc::rcg::Handler {
+class ShootHandler {
 private:
-
-    struct Kick {
-        int time_;
-        int unum_;
-        rcsc::Vector2D kicked_pos_;
-    };
-
-    std::vector< Kick > M_left_kicks;
-    std::vector< Kick > M_right_kicks;
-
 public:
 
-    ShootHandler() = default;
-    ~ShootHandler() = default;
-
-    virtual
-    bool handleEOF();
-
-    virtual
-    bool handleShow( const rcsc::rcg::ShowInfoT & show );
-
-    virtual
-    bool handleMsg( const int time,
-                    const int board,
-                    const std::string & msg );
-
-    virtual
-    bool handleDraw( const int time,
-                     const rcsc::rcg::drawinfo_t & draw );
-
-    virtual
-    bool handlePlayMode( const int time,
-                         const rcsc::PlayMode pm );
-
-    virtual
-    bool handleTeam( const int time,
-                     const rcsc::rcg::TeamT & team_l,
-                     const rcsc::rcg::TeamT & team_r );
-
-    virtual
-    bool handleServerParam( const std::string & msg );
-
-    virtual
-    bool handlePlayerParam( const std::string & msg );
-
-    virtual
-    bool handlePlayerType( const std::string & msg );
-
+    bool analyze( const FieldModel & model ) const;
 };
 
 #endif
