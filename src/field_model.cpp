@@ -30,6 +30,8 @@
 
 #include "field_model.h"
 
+#include <algorithm>
+
 using namespace rcsc;
 using namespace rcsc::rcg;
 
@@ -48,7 +50,6 @@ FieldModel::FieldModel()
  */
 FieldModel::~FieldModel()
 {
-
 }
 
 /*-------------------------------------------------------------------*/
@@ -140,4 +141,64 @@ FieldModel::setNewState( const ShowInfoT & show )
 
     FieldState::Ptr ptr( new FieldState( M_time, M_game_mode, show, prev_state ) );
     M_field_states.emplace_back( ptr );
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+FieldState::ConstPtr
+FieldModel::findState( const rcsc::GameTime & target_time ) const
+{
+    FieldState::Ptr target( new FieldState( target_time ) );
+
+    std::vector< FieldState::Ptr >::const_iterator it
+        = std::lower_bound( M_field_states.begin(),
+                            M_field_states.end(),
+                            target,
+                            []( const FieldState::Ptr & lhs,
+                                const FieldState::Ptr & rhs ) {
+                                return lhs->time() < rhs->time();
+                            } );
+    if ( it != M_field_states.end()
+         && ( *it )->time() == target_time )
+    {
+        return *it;
+    }
+    return FieldState::ConstPtr();
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+FieldState::ConstPtr
+FieldModel::findKickersStateBefore( const GameTime & target_time ) const
+{
+    FieldState::Ptr target( new FieldState( target_time ) );
+
+    std::vector< FieldState::Ptr >::const_iterator position
+        = std::upper_bound( M_field_states.begin(),
+                            M_field_states.end(),
+                            target,
+                            []( const FieldState::Ptr & lhs,
+                                const FieldState::Ptr & rhs ) {
+                                return lhs->time() > rhs->time();
+                            } );
+    if ( position == M_field_states.end() )
+    {
+        return FieldState::ConstPtr();
+    }
+
+    for ( int i = std::distance( M_field_states.begin(), position );
+          i >= 0;
+          --i )
+    {
+        if ( ! M_field_states[i]->kickers().empty() ) 
+        {
+            return M_field_states[i];
+        }
+    }
+
+    return FieldState::ConstPtr();
 }

@@ -68,6 +68,10 @@ public:
     void setNewState( const rcsc::rcg::ShowInfoT & show );
 
 
+
+    FieldState::ConstPtr findState( const rcsc::GameTime & target_time ) const;
+
+    FieldState::ConstPtr findKickersStateBefore( const rcsc::GameTime & target_time ) const;
 };
 
 #endif

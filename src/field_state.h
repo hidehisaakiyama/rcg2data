@@ -29,8 +29,8 @@
 
 #include <rcsc/coach/coach_ball_object.h>
 #include <rcsc/coach/coach_player_object.h>
-#include <rcsc/game_time.h>
 #include <rcsc/game_mode.h>
+#include <rcsc/game_time.h>
 
 #include <memory>
 
@@ -40,7 +40,6 @@ public:
     typedef std::shared_ptr< const FieldState > ConstPtr;
 
 private:
-
     rcsc::GameTime M_time;
     rcsc::GameMode M_game_mode;
     int M_score_left;
@@ -67,13 +66,14 @@ private:
     //const rcsc::CoachPlayerObject * M_fastest_intercept_teammate;
     //const rcsc::CoachPlayerObject * M_fastest_intercept_opponent;
 
-
     // not used
     FieldState() = delete;
     FieldState( const FieldState & ) = delete;
     const FieldState & operator=( const FieldState & ) = delete;
 
 public:
+
+    explicit FieldState( const rcsc::GameTime & time );
 
     FieldState( const rcsc::GameTime & time,
                 const rcsc::GameMode & mode,
@@ -82,35 +82,35 @@ public:
     ~FieldState();
 
     const rcsc::GameTime & time() const
-      {
-          return M_time;
-      }
+    {
+        return M_time;
+    }
 
     const rcsc::GameMode & gameMode() const
-      {
-          return M_game_mode;
-      }
+    {
+        return M_game_mode;
+    }
 
     int scoreLeft() const { return M_score_left; }
     int scoreRight() const { return M_score_right; }
 
     const rcsc::CoachBallObject & ball() const
-      {
-          return M_ball;
-      }
+    {
+        return M_ball;
+    }
 
     const rcsc::CoachPlayerObject::Cont & allPlayers() const
-      {
-          return M_all_players;
-      }
+    {
+        return M_all_players;
+    }
 
     const rcsc::CoachPlayerObject * getPlayer( const rcsc::SideID side,
                                                const int unum ) const;
 
     const rcsc::CoachPlayerObject::Cont & kickers() const
-      {
-          return M_kickers;
-      }
+    {
+        return M_kickers;
+    }
 
 private:
     void setScore( const int score_left,

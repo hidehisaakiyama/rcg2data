@@ -33,6 +33,25 @@
 using namespace rcsc;
 using namespace rcsc::rcg;
 
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+FieldState::FieldState( const GameTime & time )
+
+    : M_time( time ),
+      M_game_mode(),
+      M_score_left( 0 ),
+      M_score_right( 0 )
+{
+    M_all_players.reserve( 22 );
+    M_left_players.reserve( 11 );
+    M_right_players.reserve( 11 );
+    std::fill( M_left_players_array, M_left_players_array + 11, nullptr );
+    std::fill( M_right_players_array, M_right_players_array + 11, nullptr );
+}
+
 /*-------------------------------------------------------------------*/
 /*!
 
