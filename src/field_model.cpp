@@ -178,23 +178,23 @@ FieldModel::findKickersStateBefore( const GameTime & target_time ) const
     FieldState::Ptr target( new FieldState( target_time ) );
 
     std::vector< FieldState::Ptr >::const_iterator position
-        = std::upper_bound( M_field_states.begin(),
+        = std::lower_bound( M_field_states.begin(),
                             M_field_states.end(),
                             target,
                             []( const FieldState::Ptr & lhs,
                                 const FieldState::Ptr & rhs ) {
-                                return lhs->time() > rhs->time();
+                                return lhs->time() < rhs->time();
                             } );
     if ( position == M_field_states.end() )
     {
         return FieldState::ConstPtr();
     }
 
-    for ( int i = std::distance( M_field_states.begin(), position );
+    for ( int i = std::distance( M_field_states.begin(), position ) - 1;
           i >= 0;
           --i )
     {
-        if ( ! M_field_states[i]->kickers().empty() ) 
+        if ( ! M_field_states[i]->kickers().empty() )
         {
             return M_field_states[i];
         }
