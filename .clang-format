@@ -12,7 +12,8 @@ AlignEscapedNewlines: Right
 #AlignOperands:   Align
 AlignOperands: AlignAfterOperator
 #AlignOperands: BreakBeforeBinaryOperators
-AlignTrailingComments: true
+#AlignTrailingComments: true
+AlignTrailingComments: false
 AllowAllArgumentsOnNextLine: true
 AllowAllConstructorInitializersOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
