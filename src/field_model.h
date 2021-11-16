@@ -29,13 +29,12 @@
 
 #include "field_state.h"
 
-#include <rcsc/rcg/types.h>
-#include <rcsc/game_time.h>
 #include <rcsc/game_mode.h>
+#include <rcsc/game_time.h>
+#include <rcsc/rcg/types.h>
 
 class FieldModel {
 private:
-
     std::string M_left_team_name;
     std::string M_right_team_name;
 
@@ -49,7 +48,6 @@ private:
     const FieldState & operator=( const FieldState & ) = delete;
 
 public:
-
     FieldModel();
     ~FieldModel();
 
@@ -67,11 +65,9 @@ public:
                       const int score_r );
     void setNewState( const rcsc::rcg::ShowInfoT & show );
 
+    ssize_t findState( const rcsc::GameTime & target_time ) const;
 
-
-    FieldState::ConstPtr findState( const rcsc::GameTime & target_time ) const;
-
-    FieldState::ConstPtr findKickersStateBefore( const rcsc::GameTime & target_time ) const;
+    ssize_t findKickersStateBefore( const rcsc::GameTime & target_time ) const;
 };
 
 #endif

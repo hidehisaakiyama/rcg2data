@@ -147,7 +147,7 @@ FieldModel::setNewState( const ShowInfoT & show )
 /*!
 
  */
-FieldState::ConstPtr
+ssize_t
 FieldModel::findState( const rcsc::GameTime & target_time ) const
 {
     FieldState::Ptr target( new FieldState( target_time ) );
@@ -163,16 +163,17 @@ FieldModel::findState( const rcsc::GameTime & target_time ) const
     if ( it != M_field_states.end()
          && ( *it )->time() == target_time )
     {
-        return *it;
+        return std::distance( M_field_states.begin(), it );
     }
-    return FieldState::ConstPtr();
+
+    return -1;
 }
 
 /*-------------------------------------------------------------------*/
 /*!
 
  */
-FieldState::ConstPtr
+ssize_t
 FieldModel::findKickersStateBefore( const GameTime & target_time ) const
 {
     FieldState::Ptr target( new FieldState( target_time ) );
@@ -187,18 +188,18 @@ FieldModel::findKickersStateBefore( const GameTime & target_time ) const
                             } );
     if ( position == M_field_states.end() )
     {
-        return FieldState::ConstPtr();
+        return -1;
     }
 
-    for ( int i = std::distance( M_field_states.begin(), position ) - 1;
+    for ( ssize_t i = std::distance( M_field_states.begin(), position ) - 1;
           i >= 0;
           --i )
     {
         if ( ! M_field_states[i]->kickers().empty() )
         {
-            return M_field_states[i];
+            return i;
         }
     }
 
-    return FieldState::ConstPtr();
+    return -1;
 }
