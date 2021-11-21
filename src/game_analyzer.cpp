@@ -37,6 +37,8 @@
 
 #include "shoot.h"
 
+#include <rcsc/common/server_param.h>
+
 using namespace rcsc;
 
 /*-------------------------------------------------------------------*/
@@ -45,7 +47,6 @@ using namespace rcsc;
 */
 GameAnalyzer::GameAnalyzer()
 {
-
 }
 
 /*-------------------------------------------------------------------*/
@@ -58,6 +59,65 @@ GameAnalyzer::analyze( const FieldModel & model )
     analyzeShoot( model );
 
     return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+*/
+void
+GameAnalyzer::analyzeKickEvent( const FieldModel & model,
+                                const size_t idx )
+{
+    FieldState::ConstPtr state = model.getState( idx );
+    if ( ! state )
+    {
+        std::cerr << "ERROR: (GameAnalyzer::analyzeKickEvent) no state at " << idx << std::endl;
+        return;
+    }
+
+    if ( state->kickers().empty() )
+    {
+        // no kicker
+        return;
+    }
+
+    FieldState::ConstPtr prev_state = model.getState( idx - 1 );
+
+    if ( ! prev_state )
+    {
+        std::cerr << "ERROR: (GameAnalyzer::analyzeKickEvent) no previous state at " << idx << std::endl;
+        return;
+    }
+
+    // check the ball volocity to confirm the successful kick
+    // (prev_vel + accel + error) * decay = vel
+    // prev_vel + accel + error = vel / decay
+    // accel + error = vel / decay - prev_vel
+
+    const Vector2D prev_vel = prev_state->ball().vel();
+    const double prev_speed = prev_vel.r();
+    const double max_rand = prev_speed * ServerParam::i().ballRand();
+
+    const Vector2D estimated_error = state->ball().vel() / ServerParam::i().ballDecay() - prev_vel;
+
+    if ( estimated_error.r() < max_rand )
+    {
+        // no kick effect -> failed kick?
+        std::cerr << "INFO: (GameAnalyzer::analyzeKickEvent) detect kicker or tackler, but detect no kick effect." << idx << std::endl;
+        return;
+    }
+
+    Kick kick;
+    kick.index_ = idx - 1;
+    kick.kicker_side_ = ( state->kickers().size() == 1
+                              ? state->kickers().front()->side()
+                              : NEUTRAL );
+    kick.time_ = prev_state->time();
+    kick.ball_pos_ = prev_state->ball().pos();
+    kick.ball_vel_ = state->ball().vel() / ServerParam::i().ballDecay();
+
+    M_kicks.emplace_back( kick );
 }
 
 /*-------------------------------------------------------------------*/
@@ -97,7 +157,7 @@ GameAnalyzer::analyzeShoot( const FieldModel & model )
                           p != states[j]->kickers().end();
                           ++p )
                     {
-                        if ( (*p)->side() == s->gameMode().side() )
+                        if ( ( *p )->side() == s->gameMode().side() )
                         {
                             kicker = *p;
                             break;
@@ -108,8 +168,8 @@ GameAnalyzer::analyzeShoot( const FieldModel & model )
                     {
                         kicker_side = kicker->side();
                         kicker_unum = kicker->unum();
-                        start_pos = states[j-1]->ball().pos();
-                        start_time = states[j-1]->time();
+                        start_pos = states[j - 1]->ball().pos();
+                        start_time = states[j - 1]->time();
                         break;
                     }
                 }
@@ -137,7 +197,6 @@ GameAnalyzer::print( const FieldModel & model ) const
     printShoot( model );
     return true;
 }
-
 
 /*-------------------------------------------------------------------*/
 /*!

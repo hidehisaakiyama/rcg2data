@@ -27,16 +27,25 @@
 #ifndef GAME_ANALYZER_H
 #define GAME_ANALYZER_H
 
-#include "field_model.h"
 #include "action_event.h"
+#include "field_model.h"
 
 class GameAnalyzer {
 private:
 
+    struct Kick {
+        size_t index_; // index of the states
+        rcsc::SideID kicker_side_;
+        rcsc::GameTime time_;
+        rcsc::Vector2D ball_pos_;
+        rcsc::Vector2D ball_vel_;
+    };
+
+    std::vector< Kick > M_kicks;
+
     std::vector< ActionEvent::Ptr > M_shoot_events;
 
 public:
-
     GameAnalyzer();
 
     bool analyze( const FieldModel & model );
@@ -44,6 +53,8 @@ public:
     bool print( const FieldModel & model ) const;
 
 private:
+    void analyzeKickEvent( const FieldModel & model,
+                           const size_t idx );
 
     void analyzeShoot( const FieldModel & model );
     bool printShoot( const FieldModel & model ) const;
