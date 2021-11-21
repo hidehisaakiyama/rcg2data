@@ -68,6 +68,8 @@ public:
     ssize_t findState( const rcsc::GameTime & target_time ) const;
 
     ssize_t findKickersStateBefore( const rcsc::GameTime & target_time ) const;
+
+    FieldState::ConstPtr getState( const size_t idx ) const;
 };
 
 #endif

@@ -203,3 +203,18 @@ FieldModel::findKickersStateBefore( const GameTime & target_time ) const
 
     return -1;
 }
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+FieldState::ConstPtr
+FieldModel::getState( const size_t idx ) const
+{
+    if ( M_field_states.size() <= idx )
+    {
+        return FieldState::ConstPtr();
+    }
+
+    return M_field_states[idx];
+}
