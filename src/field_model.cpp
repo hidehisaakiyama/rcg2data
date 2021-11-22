@@ -42,6 +42,9 @@ using namespace rcsc::rcg;
 FieldModel::FieldModel()
 {
     M_field_states.reserve( 12000 );
+
+    FieldState::Ptr ptr( new FieldState( GameTime( 0, 0 ) ) );
+    appendState( ptr );
 }
 
 /*-------------------------------------------------------------------*/
@@ -129,7 +132,7 @@ FieldModel::updateScore( const int score_l,
 
  */
 void
-FieldModel::setNewState( const ShowInfoT & show )
+FieldModel::appendState( const ShowInfoT & show )
 {
     updateTime( show.time_, true );
 
@@ -141,6 +144,31 @@ FieldModel::setNewState( const ShowInfoT & show )
 
     FieldState::Ptr ptr( new FieldState( M_time, M_game_mode, show, prev_state ) );
     M_field_states.emplace_back( ptr );
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void
+FieldModel::appendState( FieldState::Ptr ptr )
+{
+    if ( ! ptr )
+    {
+        std::cerr << "ERROR: (FieldModel::appendState) null ptr." << std::endl;
+        return;
+    }
+
+    if ( M_field_states.empty()
+         || M_field_states.back()->time().cycle() == ptr->time().cycle() - 1
+         || ( M_field_states.back()->time().cycle() == ptr->time().cycle() - 1
+              && M_field_states.back()->time().stopped() != ptr->time().stopped() - 1 ) )
+    {
+        M_field_states.emplace_back( ptr );
+        return;
+    }
+
+    std::cerr << "ERROR: (FieldModel::appendState) illegal time." << std::endl;
 }
 
 /*-------------------------------------------------------------------*/

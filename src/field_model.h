@@ -63,7 +63,8 @@ public:
     void updateGameMode( const rcsc::PlayMode pmode );
     void updateScore( const int score_l,
                       const int score_r );
-    void setNewState( const rcsc::rcg::ShowInfoT & show );
+    void appendState( const rcsc::rcg::ShowInfoT & show );
+    void appendState( FieldState::Ptr ptr );
 
     ssize_t findState( const rcsc::GameTime & target_time ) const;
 

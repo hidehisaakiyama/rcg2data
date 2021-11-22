@@ -88,7 +88,7 @@ RCGReader::handleEOF()
 bool
 RCGReader::handleShow( const ShowInfoT & show )
 {
-    M_field_model.setNewState( show );
+    M_field_model.appendState( show );
 
     return true;
 }
