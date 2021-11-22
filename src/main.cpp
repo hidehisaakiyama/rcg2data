@@ -40,7 +40,7 @@
 int
 main( int argc, char **argv )
 {
-    std::cout << "******************************************************************\n"
+    std::cerr << "******************************************************************\n"
               << " " PACKAGE_NAME " " VERSION "\n"
               << " Copyright: (C) 2021- Hidehisa Akiyama\n"
               << " All rights reserved.\n"
