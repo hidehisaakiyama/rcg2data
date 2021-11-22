@@ -56,6 +56,11 @@ GameAnalyzer::GameAnalyzer()
 bool
 GameAnalyzer::analyze( const FieldModel & model )
 {
+    for ( size_t i = 0; i < model.fieldStates().size(); ++i )
+    {
+        analyzeKickEvent( model, i );
+    }
+
     analyzeShoot( model );
 
     return true;
@@ -110,9 +115,10 @@ GameAnalyzer::analyzeKickEvent( const FieldModel & model,
 
     Kick kick;
     kick.index_ = idx - 1;
-    kick.kicker_side_ = ( state->kickers().size() == 1
-                              ? state->kickers().front()->side()
-                              : NEUTRAL );
+    kick.side_ = ( state->kickers().size() == 1 ) ? state->kickers().front()->side()
+                                                  : NEUTRAL;
+    kick.unum_ = ( state->kickers().size() == 1 ) ? state->kickers().front()->unum()
+                                                  : Unum_Unknown;
     kick.time_ = prev_state->time();
     kick.ball_pos_ = prev_state->ball().pos();
     kick.ball_vel_ = state->ball().vel() / ServerParam::i().ballDecay();
@@ -151,7 +157,7 @@ GameAnalyzer::analyzeShoot( const FieldModel & model )
             {
                 if ( ! states[j]->kickers().empty() )
                 {
-                    std::cerr << "Find kicker " << states[j]->time() << std::endl;
+                    std::cerr << "Find shoot kicker " << states[j]->time() << std::endl;
                     const rcsc::CoachPlayerObject * kicker = nullptr;
                     for ( CoachPlayerObject::Cont::const_iterator p = states[j]->kickers().begin();
                           p != states[j]->kickers().end();
@@ -194,7 +200,49 @@ GameAnalyzer::analyzeShoot( const FieldModel & model )
 bool
 GameAnalyzer::print( const FieldModel & model ) const
 {
-    printShoot( model );
+    printKickEvent( model );
+//    printShoot( model );
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+*/
+bool
+GameAnalyzer::printKickEvent( const FieldModel & model ) const
+{
+    const std::string team_l = model.leftTeamName();
+    const std::string team_r = model.rightTeamName();
+    const std::string unknown = "Unknown";
+
+    std::cout << "Type,"
+              << "TeamName,"
+              << "Side,"
+              << "Kicker,"
+              << "Time,"
+              << "X,"
+              << "Y,"
+              << "VelX,"
+              << "VelY"
+              << std::endl;
+    for ( const auto & i : M_kicks )
+    {
+        const std::string team = ( i.side_ == LEFT    ? team_l
+                                   : i.side_ == RIGHT ? team_r
+                                                      : unknown );
+        std::cout << "Kick,"
+                  << team << ','
+                  << side_char( i.side_ ) << ','
+                  << i.unum_ << ','
+                  << i.time_.cycle() << ','
+                  << i.ball_pos_.x << ','
+                  << i.ball_pos_.y << ','
+                  << i.ball_vel_.x << ','
+                  << i.ball_vel_.y << ','
+                  << '\n';
+    }
+
     return true;
 }
 
@@ -208,7 +256,7 @@ GameAnalyzer::printShoot( const FieldModel & model ) const
     const std::string team_l = model.leftTeamName();
     const std::string team_r = model.rightTeamName();
 
-    std::cout << "Shoot,"
+    std::cout << "Type,"
               << "TeamName,"
               << "Side,"
               << "Kicker,"

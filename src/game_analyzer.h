@@ -35,7 +35,8 @@ private:
 
     struct Kick {
         size_t index_; // index of the states
-        rcsc::SideID kicker_side_;
+        rcsc::SideID side_;
+        int unum_;
         rcsc::GameTime time_;
         rcsc::Vector2D ball_pos_;
         rcsc::Vector2D ball_vel_;
@@ -57,6 +58,8 @@ private:
                            const size_t idx );
 
     void analyzeShoot( const FieldModel & model );
+
+    bool printKickEvent( const FieldModel & model ) const;
     bool printShoot( const FieldModel & model ) const;
 };
 
