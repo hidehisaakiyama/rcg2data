@@ -38,8 +38,8 @@ private:
         rcsc::SideID side_;
         int unum_;
         rcsc::GameTime time_;
-        rcsc::Vector2D ball_pos_;
-        rcsc::Vector2D ball_vel_;
+        rcsc::Vector2D pos_;
+        rcsc::Vector2D vel_;
     };
 
     std::vector< Kick > M_kicks;

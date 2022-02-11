@@ -122,8 +122,8 @@ GameAnalyzer::extractKickEvent( const FieldModel & model,
                    ? state->kickers().front()->unum()
                    : Unum_Unknown;
     kick.time_ = prev_state->time();
-    kick.ball_pos_ = prev_state->ball().pos();
-    kick.ball_vel_ = state->ball().vel() / ServerParam::i().ballDecay();
+    kick.pos_ = prev_state->ball().pos();
+    kick.vel_ = state->ball().vel() / ServerParam::i().ballDecay();
 
     M_kicks.emplace_back( kick );
 }
@@ -228,20 +228,20 @@ GameAnalyzer::printKickEvent( const FieldModel & model ) const
               << "VelX,"
               << "VelY"
               << std::endl;
-    for ( const auto & i : M_kicks )
+    for ( const Kick & k : M_kicks )
     {
-        const std::string team = ( i.side_ == LEFT    ? team_l
-                                   : i.side_ == RIGHT ? team_r
+        const std::string team = ( k.side_ == LEFT    ? team_l
+                                   : k.side_ == RIGHT ? team_r
                                                       : unknown );
         std::cout << "Kick,"
                   << team << ','
-                  << side_char( i.side_ ) << ','
-                  << i.unum_ << ','
-                  << i.time_.cycle() << ','
-                  << i.ball_pos_.x << ','
-                  << i.ball_pos_.y << ','
-                  << i.ball_vel_.x << ','
-                  << i.ball_vel_.y << ','
+                  << side_char( k.side_ ) << ','
+                  << k.unum_ << ','
+                  << k.time_.cycle() << ','
+                  << k.pos_.x << ','
+                  << k.pos_.y << ','
+                  << k.vel_.x << ','
+                  << k.vel_.y << ','
                   << '\n';
     }
 
