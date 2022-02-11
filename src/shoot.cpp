@@ -43,7 +43,7 @@ Shoot::Shoot( const SideID kicker_side,
               const GameTime & end_time,
               const Vector2D & end_pos,
               const bool success )
-    : ActionEvent( ActionEvent::Shoot,
+    : ActionEvent( ActionEvent::Shot,
                    kicker_side, kicker_unum,
                    start_time, start_pos,
                    end_time, end_pos,

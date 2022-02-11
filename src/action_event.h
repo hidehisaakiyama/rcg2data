@@ -38,11 +38,31 @@ public:
 
     typedef std::shared_ptr< ActionEvent > Ptr;
 
+    // Action types defined in SPADL
+    // https://socceraction.readthedocs.io/en/latest/documentation/SPADL_definitions.html
     enum Type {
-        Shoot,
         Pass,
-        Dribble,
-        Hold,
+        Cross,
+        KickIn, // ThrowIn
+        CrossedFreeKick,
+        // ShortFreeKick,
+        // CrossedCorner,
+        ShortCorner,
+        TakeOn, // Attempt to dribble past opponent
+        Foul,
+        Tackle,
+        Interception,
+        Shot,
+        PenaltyShot,
+        FreeKickShot, // diret freekick on goal
+        KeeperSave, // Keeper saves a shot on goal
+        KeeperClaim, // Keeper catches a cross
+        KeeperPunch, // Keeper Punches the ball clear
+        // KeeperPickUp, // Keeper picks up the ball
+        Clearance,
+        BallTouch, // Player makes a bad touch and loses the ball
+        Dribble, // Player dribbles at least 3 meters with the ball
+        GoalKick,
         None,
     };
 
@@ -85,9 +105,7 @@ public:
     const rcsc::Vector2D & endPos() const { return M_end_pos; }
     bool success() const { return M_success; }
 
-
-    virtual
-    const char * actionName() const = 0;
+    virtual const char * actionName() const = 0;
 };
 
 #endif
