@@ -42,7 +42,7 @@ main( int argc, char **argv )
 {
     std::cerr << "******************************************************************\n"
               << " " PACKAGE_NAME " " VERSION "\n"
-              << " Copyright: (C) 2021- Hidehisa Akiyama\n"
+              << " Copyright: (C) Hidehisa Akiyama\n"
               << " All rights reserved.\n"
               << "******************************************************************\n"
               << std::endl;
