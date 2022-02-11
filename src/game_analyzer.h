@@ -54,7 +54,7 @@ public:
     bool print( const FieldModel & model ) const;
 
 private:
-    void analyzeKickEvent( const FieldModel & model,
+    void extractKickEvent( const FieldModel & model,
                            const size_t idx );
 
     void analyzeShoot( const FieldModel & model );

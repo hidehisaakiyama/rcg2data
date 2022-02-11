@@ -58,7 +58,7 @@ GameAnalyzer::analyze( const FieldModel & model )
 {
     for ( size_t i = 0; i < model.fieldStates().size(); ++i )
     {
-        analyzeKickEvent( model, i );
+        extractKickEvent( model, i );
     }
 
     analyzeShoot( model );
@@ -71,13 +71,13 @@ GameAnalyzer::analyze( const FieldModel & model )
 
 */
 void
-GameAnalyzer::analyzeKickEvent( const FieldModel & model,
+GameAnalyzer::extractKickEvent( const FieldModel & model,
                                 const size_t idx )
 {
     FieldState::ConstPtr state = model.getState( idx );
     if ( ! state )
     {
-        std::cerr << "ERROR: (GameAnalyzer::analyzeKickEvent) no state at " << idx << std::endl;
+        std::cerr << "ERROR: (GameAnalyzer::extractKickEvent) no state at " << idx << std::endl;
         return;
     }
 
@@ -91,7 +91,7 @@ GameAnalyzer::analyzeKickEvent( const FieldModel & model,
 
     if ( ! prev_state )
     {
-        std::cerr << "ERROR: (GameAnalyzer::analyzeKickEvent) no previous state at " << idx << std::endl;
+        std::cerr << "ERROR: (GameAnalyzer::extractKickEvent) no previous state at " << idx << std::endl;
         return;
     }
 
@@ -109,16 +109,18 @@ GameAnalyzer::analyzeKickEvent( const FieldModel & model,
     if ( estimated_error.r() < max_rand )
     {
         // no kick effect -> failed kick?
-        std::cerr << "INFO: (GameAnalyzer::analyzeKickEvent) detect kicker or tackler, but detect no kick effect." << idx << std::endl;
+        std::cerr << "INFO: (GameAnalyzer::extractKickEvent) detect kicker or tackler, but detect no kick effect." << idx << std::endl;
         return;
     }
 
     Kick kick;
     kick.index_ = idx - 1;
-    kick.side_ = ( state->kickers().size() == 1 ) ? state->kickers().front()->side()
-                                                  : NEUTRAL;
-    kick.unum_ = ( state->kickers().size() == 1 ) ? state->kickers().front()->unum()
-                                                  : Unum_Unknown;
+    kick.side_ = state->kickers().size() == 1
+                   ? state->kickers().front()->side()
+                   : NEUTRAL;
+    kick.unum_ = state->kickers().size() == 1
+                   ? state->kickers().front()->unum()
+                   : Unum_Unknown;
     kick.time_ = prev_state->time();
     kick.ball_pos_ = prev_state->ball().pos();
     kick.ball_vel_ = state->ball().vel() / ServerParam::i().ballDecay();
@@ -201,7 +203,7 @@ bool
 GameAnalyzer::print( const FieldModel & model ) const
 {
     printKickEvent( model );
-//    printShoot( model );
+    //    printShoot( model );
     return true;
 }
 
