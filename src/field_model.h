@@ -51,18 +51,18 @@ public:
     FieldModel();
     ~FieldModel();
 
-    const std::string leftTeamName() const { return M_left_team_name; }
-    const std::string rightTeamName() const { return M_right_team_name; }
+    const std::string & leftTeamName() const { return M_left_team_name; }
+    const std::string & rightTeamName() const { return M_right_team_name; }
     const std::vector< FieldState::Ptr > & fieldStates() const { return M_field_states; }
 
     void updateTeamNames( const std::string & team_l,
                           const std::string & team_r );
-
     void updateTime( const int time,
                      const bool by_show );
     void updateGameMode( const rcsc::PlayMode pmode );
     void updateScore( const int score_l,
                       const int score_r );
+                      
     void appendState( const rcsc::rcg::ShowInfoT & show );
     void appendState( FieldState::Ptr ptr );
 
