@@ -1,9 +1,12 @@
 ---
+# clang-format 13.0.0
 Language:        Cpp
 # BasedOnStyle:  GNU
 #AccessModifierOffset: -2
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
+#AlignArrayOfStructures: None
+AlignArrayOfStructures: Right
 AlignConsecutiveMacros: None
 AlignConsecutiveAssignments: None
 AlignConsecutiveBitFields: None
@@ -53,7 +56,8 @@ BraceWrapping:
   AfterExternBlock: true
   BeforeCatch:     true
   BeforeElse:      true
-  BeforeLambdaBody: false
+#  BeforeLambdaBody: false
+  BeforeLambdaBody: true
   BeforeWhile:     true
 #  IndentBraces:    true
   IndentBraces:    false
@@ -83,15 +87,18 @@ Cpp11BracedListStyle: false
 DeriveLineEnding: true
 DerivePointerAlignment: false
 DisableFormat:   false
-EmptyLineBeforeAccessModifier: LogicalBlock
+#EmptyLineAfterAccessModifier: Never
+EmptyLineAfterAccessModifier: Leave
+#EmptyLineBeforeAccessModifier: LogicalBlock
+EmptyLineBeforeAccessModifier: Always
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: false
 ForEachMacros:
   - foreach
   - Q_FOREACH
   - BOOST_FOREACH
-StatementAttributeLikeMacros:
-  - Q_EMIT
+IfMacros:
+  - KJ_IF_MAYBE
 IncludeBlocks:   Preserve
 IncludeCategories:
   - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
@@ -108,6 +115,7 @@ IncludeCategories:
     CaseSensitive:   false
 IncludeIsMainRegex: '(Test)?$'
 IncludeIsMainSourceRegex: ''
+IndentAccessModifiers: false
 IndentCaseLabels: false
 IndentCaseBlocks: false
 IndentGotoLabels: true
@@ -121,6 +129,7 @@ InsertTrailingCommas: None
 JavaScriptQuotes: Leave
 JavaScriptWrapImports: true
 KeepEmptyLinesAtTheStartOfBlocks: true
+LambdaBodyIndentation: Signature
 MacroBlockBegin: ''
 MacroBlockEnd:   ''
 MaxEmptyLinesToKeep: 1
@@ -141,11 +150,16 @@ PenaltyReturnTypeOnItsOwnLine: 60
 PenaltyIndentedWhitespace: 0
 #PointerAlignment: Right
 PointerAlignment: Middle
+PPIndentWidth:   -1
+ReferenceAlignment: Pointer
 #ReflowComments:  true
 ReflowComments:  false
-SortIncludes:    true
+ShortNamespaceLines: 1
+#SortIncludes:    CaseSensitive
+SortIncludes:    Never
 SortJavaStaticImport: Before
-SortUsingDeclarations: true
+#SortUsingDeclarations: true
+SortUsingDeclarations: false
 SpaceAfterCStyleCast: false
 #SpaceAfterLogicalNot: false
 SpaceAfterLogicalNot: true
@@ -166,9 +180,13 @@ SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 1
 #SpacesInAngles:  false
 SpacesInAngles:  true
-SpacesInConditionalStatement: false
+#SpacesInConditionalStatement: false
+SpacesInConditionalStatement: true
 SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
+SpacesInLineCommentPrefix:
+  Minimum:         1
+  Maximum:         -1
 #SpacesInParentheses: false
 SpacesInParentheses: true
 SpacesInSquareBrackets: false
@@ -176,6 +194,8 @@ SpaceBeforeSquareBrackets: false
 BitFieldColonSpacing: Both
 #Standard:        c++03
 Standard:        c++14
+StatementAttributeLikeMacros:
+  - Q_EMIT
 StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION
