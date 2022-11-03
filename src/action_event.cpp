@@ -37,18 +37,22 @@ using namespace rcsc;
 
  */
 ActionEvent::ActionEvent( const Type action_type,
-                          const SideID player_side,
-                          const int player_unum,
+                          const SideID start_player_side,
+                          const int start_player_unum,
                           const GameTime & start_time,
                           const Vector2D & start_pos,
+                          const SideID end_player_side,
+                          const int end_player_unum,
                           const GameTime & end_time,
                           const Vector2D & end_pos,
                           const bool success )
     : M_action_type( action_type ),
-      M_player_side( player_side ),
-      M_player_unum( player_unum ),
+      M_start_player_side( start_player_side ),
+      M_start_player_unum( start_player_unum ),
       M_start_time( start_time ),
       M_start_pos( start_pos ),
+      M_end_player_side( end_player_side ),
+      M_end_player_unum( end_player_unum ),
       M_end_time( end_time ),
       M_end_pos( end_pos ),
       M_success( success )

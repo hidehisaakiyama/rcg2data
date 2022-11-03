@@ -271,9 +271,9 @@ GameAnalyzer::printShoot( const FieldModel & model ) const
     for ( const auto & i : M_shoot_events )
     {
         std::cout << "Shoot,"
-                  << ( i->playerSide() == LEFT ? team_l : team_r ) << ','
-                  << side_char( i->playerSide() ) << ','
-                  << i->playerUnum() << ','
+                  << ( i->startPlayerSide() == LEFT ? team_l : team_r ) << ','
+                  << side_char( i->startPlayerSide() ) << ','
+                  << i->startPlayerUnum() << ','
                   << i->startTime().cycle() << ','
                   << i->startPos().x << ','
                   << i->startPos().y << ','
@@ -283,6 +283,34 @@ GameAnalyzer::printShoot( const FieldModel & model ) const
     }
 
     std::cout << std::flush;
+
+    return true;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*!
+
+*/
+bool
+GameAnalyzer::printPass( const FieldModel & model ) const
+{
+    const std::string team_l = model.leftTeamName();
+    const std::string team_r = model.rightTeamName();
+
+    for ( const ActionEvent::Ptr & pass : M_pass_events )
+    {
+        std::cout << "Pass,"
+                  << ( pass->startPlayerSide() == LEFT ? team_l : team_r ) << ','
+                  << side_char( pass->startPlayerSide() ) << ','
+                  << pass->startPlayerUnum() << ','
+                  << pass->startTime().cycle() << ','
+                  << pass->startPos().x << ','
+                  << pass->startPos().y << ','
+                  << pass->endTime().cycle() << ','
+                  << pass->endPos().x << ','
+                  << pass->endPos().y << '\n';
+    }
 
     return true;
 }

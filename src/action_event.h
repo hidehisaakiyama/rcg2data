@@ -70,11 +70,14 @@ private:
 
     Type M_action_type;
 
-    rcsc::SideID M_player_side;
-    int M_player_unum;
+    rcsc::SideID M_start_player_side;
+    int M_start_player_unum;
 
     rcsc::GameTime M_start_time;
     rcsc::Vector2D M_start_pos;
+
+    rcsc::SideID M_end_player_side;
+    int M_end_player_unum;
 
     rcsc::GameTime M_end_time;
     rcsc::Vector2D M_end_pos;
@@ -86,10 +89,12 @@ private:
 protected:
 
     ActionEvent( const Type action_type,
-                 const rcsc::SideID player_side,
-                 const int player_unum,
+                 const rcsc::SideID start_player_side,
+                 const int start_player_unum,
                  const rcsc::GameTime & start_time,
                  const rcsc::Vector2D & start_pos,
+                 const rcsc::SideID end_player_side,
+                 const int end_player_unum,
                  const rcsc::GameTime & end_time,
                  const rcsc::Vector2D & end_pos,
                  const bool success );
@@ -97,10 +102,12 @@ protected:
 public:
 
     Type actionType() const { return M_action_type; }
-    rcsc::SideID playerSide() const { return M_player_side; }
-    int playerUnum() const { return M_player_unum; }
+    rcsc::SideID startPlayerSide() const { return M_start_player_side; }
+    int startPlayerUnum() const { return M_start_player_unum; }
     const rcsc::GameTime & startTime() const { return M_start_time; }
     const rcsc::Vector2D & startPos() const { return M_start_pos; }
+    rcsc::SideID endPlayerSide() const { return M_end_player_side; }
+    int endPlayerUnum() const { return M_end_player_unum; }
     const rcsc::GameTime & endTime() const { return M_end_time; }
     const rcsc::Vector2D & endPos() const { return M_end_pos; }
     bool success() const { return M_success; }

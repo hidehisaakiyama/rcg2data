@@ -46,6 +46,7 @@ Shoot::Shoot( const SideID kicker_side,
     : ActionEvent( ActionEvent::Shot,
                    kicker_side, kicker_unum,
                    start_time, start_pos,
+                   NEUTRAL, Unum_Unknown,
                    end_time, end_pos,
                    success )
 {

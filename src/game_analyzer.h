@@ -45,7 +45,8 @@ private:
     std::vector< Kick > M_kicks;
 
     std::vector< ActionEvent::Ptr > M_shoot_events;
-
+    std::vector< ActionEvent::Ptr > M_pass_events;
+    std::vector< ActionEvent::Ptr > M_intercept_events;
 public:
     GameAnalyzer();
 
@@ -61,6 +62,7 @@ private:
 
     bool printKickEvent( const FieldModel & model ) const;
     bool printShoot( const FieldModel & model ) const;
+    bool printPass( const FieldModel & model ) const;
 };
 
 #endif
