@@ -44,15 +44,16 @@ using namespace rcsc;
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
+ */
 GameAnalyzer::GameAnalyzer()
 {
+
 }
 
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
+ */
 bool
 GameAnalyzer::analyze( const FieldModel & model )
 {
@@ -69,7 +70,7 @@ GameAnalyzer::analyze( const FieldModel & model )
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
+ */
 void
 GameAnalyzer::extractKickEvent( const FieldModel & model,
                                 const size_t idx )
@@ -116,11 +117,11 @@ GameAnalyzer::extractKickEvent( const FieldModel & model,
     Kick kick;
     kick.index_ = idx - 1;
     kick.side_ = state->kickers().size() == 1
-                   ? state->kickers().front()->side()
-                   : NEUTRAL;
+        ? state->kickers().front()->side()
+        : NEUTRAL;
     kick.unum_ = state->kickers().size() == 1
-                   ? state->kickers().front()->unum()
-                   : Unum_Unknown;
+        ? state->kickers().front()->unum()
+        : Unum_Unknown;
     kick.time_ = prev_state->time();
     kick.pos_ = prev_state->ball().pos();
     kick.vel_ = state->ball().vel() / ServerParam::i().ballDecay();
@@ -131,7 +132,7 @@ GameAnalyzer::extractKickEvent( const FieldModel & model,
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
+ */
 void
 GameAnalyzer::analyzeShoot( const FieldModel & model )
 {
@@ -198,7 +199,7 @@ GameAnalyzer::analyzeShoot( const FieldModel & model )
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
+ */
 bool
 GameAnalyzer::print( const FieldModel & model ) const
 {
@@ -210,7 +211,7 @@ GameAnalyzer::print( const FieldModel & model ) const
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
+ */
 bool
 GameAnalyzer::printKickEvent( const FieldModel & model ) const
 {
@@ -230,9 +231,9 @@ GameAnalyzer::printKickEvent( const FieldModel & model ) const
               << std::endl;
     for ( const Kick & k : M_kicks )
     {
-        const std::string team = ( k.side_ == LEFT    ? team_l
+        const std::string team = ( k.side_ == LEFT ? team_l
                                    : k.side_ == RIGHT ? team_r
-                                                      : unknown );
+                                   : unknown );
         std::cout << "Kick,"
                   << team << ','
                   << side_char( k.side_ ) << ','
@@ -251,7 +252,7 @@ GameAnalyzer::printKickEvent( const FieldModel & model ) const
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
+ */
 bool
 GameAnalyzer::printShoot( const FieldModel & model ) const
 {
@@ -268,18 +269,18 @@ GameAnalyzer::printShoot( const FieldModel & model ) const
               << "EndTime,"
               << "EndX,"
               << "EndY\n";
-    for ( const auto & i : M_shoot_events )
+    for ( const ActionEvent::Ptr & ev : M_shoot_events )
     {
         std::cout << "Shoot,"
-                  << ( i->startPlayerSide() == LEFT ? team_l : team_r ) << ','
-                  << side_char( i->startPlayerSide() ) << ','
-                  << i->startPlayerUnum() << ','
-                  << i->startTime().cycle() << ','
-                  << i->startPos().x << ','
-                  << i->startPos().y << ','
-                  << i->endTime().cycle() << ','
-                  << i->endPos().x << ','
-                  << i->endPos().y << '\n';
+                  << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','
+                  << side_char( ev->startPlayerSide() ) << ','
+                  << ev->startPlayerUnum() << ','
+                  << ev->startTime().cycle() << ','
+                  << ev->startPos().x << ','
+                  << ev->startPos().y << ','
+                  << ev->endTime().cycle() << ','
+                  << ev->endPos().x << ','
+                  << ev->endPos().y << '\n';
     }
 
     std::cout << std::flush;
@@ -291,25 +292,25 @@ GameAnalyzer::printShoot( const FieldModel & model ) const
 /*-------------------------------------------------------------------*/
 /*!
 
-*/
+ */
 bool
 GameAnalyzer::printPass( const FieldModel & model ) const
 {
     const std::string team_l = model.leftTeamName();
     const std::string team_r = model.rightTeamName();
 
-    for ( const ActionEvent::Ptr & pass : M_pass_events )
+    for ( const ActionEvent::Ptr & ev : M_pass_events )
     {
         std::cout << "Pass,"
-                  << ( pass->startPlayerSide() == LEFT ? team_l : team_r ) << ','
-                  << side_char( pass->startPlayerSide() ) << ','
-                  << pass->startPlayerUnum() << ','
-                  << pass->startTime().cycle() << ','
-                  << pass->startPos().x << ','
-                  << pass->startPos().y << ','
-                  << pass->endTime().cycle() << ','
-                  << pass->endPos().x << ','
-                  << pass->endPos().y << '\n';
+                  << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','
+                  << side_char( ev->startPlayerSide() ) << ','
+                  << ev->startPlayerUnum() << ','
+                  << ev->startTime().cycle() << ','
+                  << ev->startPos().x << ','
+                  << ev->startPos().y << ','
+                  << ev->endTime().cycle() << ','
+                  << ev->endPos().x << ','
+                  << ev->endPos().y << '\n';
     }
 
     return true;
