@@ -59,3 +59,75 @@ ActionEvent::ActionEvent( const Type action_type,
 {
 
 }
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+Shoot::Shoot( const SideID kicker_side,
+              const int kicker_unum,
+              const GameTime & start_time,
+              const Vector2D & start_pos,
+              const GameTime & end_time,
+              const Vector2D & end_pos,
+              const bool success )
+    : ActionEvent( ActionEvent::Shot,
+                   kicker_side, kicker_unum,
+                   start_time, start_pos,
+                   NEUTRAL, Unum_Unknown,
+                   end_time, end_pos,
+                   success )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+const char *
+Shoot::actionName() const
+{
+    return "Shoot";
+}
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+Pass::Pass( const SideID kicker_side,
+            const int kicker_unum,
+            const GameTime & start_time,
+            const Vector2D & start_pos,
+            const SideID receiver_side,
+            const int receiver_unum,
+            const GameTime & end_time,
+            const Vector2D & end_pos,
+            const bool success )
+    : ActionEvent( ActionEvent::Pass,
+                   kicker_side, kicker_unum,
+                   start_time, start_pos,
+                   receiver_side, receiver_unum,
+                   end_time, end_pos,
+                   success )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+const char *
+Pass::actionName() const
+{
+    return "Pass";
+}

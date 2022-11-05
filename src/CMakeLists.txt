@@ -7,7 +7,6 @@ add_executable(rcg2data
   field_state.cpp
   game_analyzer.cpp
   rcg_reader.cpp
-  shoot.cpp
   )
 
 

@@ -35,8 +35,6 @@
 
 #include "game_analyzer.h"
 
-#include "shoot.h"
-
 #include <rcsc/common/server_param.h>
 
 using namespace rcsc;

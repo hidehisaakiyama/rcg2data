@@ -110,9 +110,55 @@ public:
     int endPlayerUnum() const { return M_end_player_unum; }
     const rcsc::GameTime & endTime() const { return M_end_time; }
     const rcsc::Vector2D & endPos() const { return M_end_pos; }
-    bool success() const { return M_success; }
+    bool isSuccess() const { return M_success; }
 
     virtual const char * actionName() const = 0;
+};
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class Shoot
+    : public ActionEvent {
+private:
+
+public:
+
+    Shoot( const rcsc::SideID kicker_side,
+           const int kicker_unum,
+           const rcsc::GameTime & start_time,
+           const rcsc::Vector2D & start_pos,
+           const rcsc::GameTime & end_time,
+           const rcsc::Vector2D & end_pos,
+           const bool success );
+
+    const char * actionName() const;
+};
+
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class Pass
+    : public ActionEvent {
+private:
+
+public:
+
+    Pass( const rcsc::SideID kicker_side,
+          const int kicker_unum,
+          const rcsc::GameTime & start_time,
+          const rcsc::Vector2D & start_pos,
+          const rcsc::SideID receiver_side,
+          const int receiver_unum,
+          const rcsc::GameTime & end_time,
+          const rcsc::Vector2D & end_pos,
+          const bool success );
+
+    const char * actionName() const;
+
 };
 
 #endif
