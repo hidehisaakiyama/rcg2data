@@ -60,7 +60,8 @@ GameAnalyzer::analyze( const FieldModel & model )
         extractKickEvent( model, i );
     }
 
-    analyzeShoot( model );
+    extractShootEvent( model );
+    extractPassEvent( model );
 
     return true;
 }
@@ -121,10 +122,11 @@ GameAnalyzer::extractKickEvent( const FieldModel & model,
         ? state->kickers().front()->unum()
         : Unum_Unknown;
     kick.time_ = prev_state->time();
+    kick.mode_ = prev_state->gameMode();
     kick.pos_ = prev_state->ball().pos();
     kick.vel_ = state->ball().vel() / ServerParam::i().ballDecay();
 
-    M_kicks.emplace_back( kick );
+    M_kicks.push_back( kick );
 }
 
 /*-------------------------------------------------------------------*/
@@ -132,7 +134,7 @@ GameAnalyzer::extractKickEvent( const FieldModel & model,
 
  */
 void
-GameAnalyzer::analyzeShoot( const FieldModel & model )
+GameAnalyzer::extractShootEvent( const FieldModel & model )
 {
     const std::vector< FieldState::Ptr > & states = model.fieldStates();
     const size_t max_states = states.size();
@@ -194,6 +196,66 @@ GameAnalyzer::analyzeShoot( const FieldModel & model )
     }
 }
 
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void
+GameAnalyzer::extractPassEvent( const FieldModel & /*model*/ )
+{
+
+    // SideID last_kicker_side = NEUTRAL;
+    // int last_kicker_unum = Unum_Unknown;
+    // Vector2D last_kick_pos = Vector2D::INVALIDATED;
+
+    // for ( const FieldState::Ptr & state : model.fieldStates() )
+    // {
+    //     if ( state->gameMode().isServerCycleStoppedMode() )
+    //     {
+    //         last_kicker_side = NEUTRAL;
+    //         last_kicker_unum = Unum_Unknown;
+    //         continue;
+    //     }
+
+    //     if ( ! state->gameMode().isTeamsSetPlay( last_kicker_side ) )
+    //     {
+    //         last_kicker_side = NEUTRAL;
+    //         last_kicker_unum = Unum_Unknown;
+    //         continue;
+    //     }
+
+    //     if ( state->kickers().size() != 1 )
+    //     {
+    //         last_kicker_side = NEUTRAL;
+    //         last_kicker_unum = Unum_Unknown;
+    //         continue;
+    //     }
+
+    //     const CoachPlayerObject * kicker = state->kickers().front();
+    //     if ( last_kicker_side != kicker->side() )
+    //     {
+    //         last_kicker_side = kicker->side();
+    //         last_kicker_unum = kicker->unum();
+    //         continue;
+    //     }
+
+    //     if ( state->gameMode().type() != GameMode::PlayOn )
+    //     {
+    //         continue;
+    //     }
+
+    //     if ( last_kicker_unum == kicker->unum() )
+    //     {
+    //         continue;
+    //     }
+
+    //     std::cerr << "INFO: (GameAnalyzer::extractPassEvent) detect pass "
+    //               << state->time()
+    //               << " kicker=" << side_str( last_kicker_side ) << " " << last_kicker_unum << std::endl;
+    // }
+}
+
 /*-------------------------------------------------------------------*/
 /*!
 
@@ -201,8 +263,8 @@ GameAnalyzer::analyzeShoot( const FieldModel & model )
 bool
 GameAnalyzer::print( const FieldModel & model ) const
 {
-    printKickEvent( model );
-    //    printShoot( model );
+    printKickEvents( model );
+    //    printShootEvents( model );
     return true;
 }
 
@@ -211,7 +273,7 @@ GameAnalyzer::print( const FieldModel & model ) const
 
  */
 bool
-GameAnalyzer::printKickEvent( const FieldModel & model ) const
+GameAnalyzer::printKickEvents( const FieldModel & model ) const
 {
     const std::string team_l = model.leftTeamName();
     const std::string team_r = model.rightTeamName();
@@ -252,7 +314,7 @@ GameAnalyzer::printKickEvent( const FieldModel & model ) const
 
  */
 bool
-GameAnalyzer::printShoot( const FieldModel & model ) const
+GameAnalyzer::printShootEvents( const FieldModel & model ) const
 {
     const std::string team_l = model.leftTeamName();
     const std::string team_r = model.rightTeamName();
@@ -292,7 +354,7 @@ GameAnalyzer::printShoot( const FieldModel & model ) const
 
  */
 bool
-GameAnalyzer::printPass( const FieldModel & model ) const
+GameAnalyzer::printPassEvents( const FieldModel & model ) const
 {
     const std::string team_l = model.leftTeamName();
     const std::string team_r = model.rightTeamName();

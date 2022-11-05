@@ -38,6 +38,7 @@ private:
         rcsc::SideID side_;
         int unum_;
         rcsc::GameTime time_;
+        rcsc::GameMode mode_;
         rcsc::Vector2D pos_;
         rcsc::Vector2D vel_;
     };
@@ -58,11 +59,12 @@ private:
     void extractKickEvent( const FieldModel & model,
                            const size_t idx );
 
-    void analyzeShoot( const FieldModel & model );
+    void extractShootEvent( const FieldModel & model );
+    void extractPassEvent( const FieldModel & model );
 
-    bool printKickEvent( const FieldModel & model ) const;
-    bool printShoot( const FieldModel & model ) const;
-    bool printPass( const FieldModel & model ) const;
+    bool printKickEvents( const FieldModel & model ) const;
+    bool printShootEvents( const FieldModel & model ) const;
+    bool printPassEvents( const FieldModel & model ) const;
 };
 
 #endif
