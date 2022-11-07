@@ -57,8 +57,14 @@ private:
     //! right player array (reference)
     rcsc::CoachPlayerObject * M_right_players_array[11];
 
-    // players that performed a kick/tackle command successfully (reference)
+    // players that collide with the ball (reference)
+    rcsc::CoachPlayerObject::Cont M_ball_colliders;
+    // players that performed a kick command (reference)
     rcsc::CoachPlayerObject::Cont M_kickers;
+    // players that performed a tackle command (reference)
+    rcsc::CoachPlayerObject::Cont M_tacklers;
+    // players that catch the ball (reference)
+    rcsc::CoachPlayerObject::Cont M_catchers;
 
     //rcsc::SideID M_ball_owner_side; //!< estimated ball owner team side.
     //const rcsc::CoachPlayerObject * M_ball_owner; // estimated current ball owner
@@ -107,9 +113,24 @@ public:
     const rcsc::CoachPlayerObject * getPlayer( const rcsc::SideID side,
                                                const int unum ) const;
 
+    const rcsc::CoachPlayerObject::Cont & ballColliders() const
+    {
+        return M_ball_colliders;
+    }
+
     const rcsc::CoachPlayerObject::Cont & kickers() const
     {
         return M_kickers;
+    }
+
+    const rcsc::CoachPlayerObject::Cont & tacklers() const
+    {
+        return M_tacklers;
+    }
+
+    const rcsc::CoachPlayerObject::Cont & catchers() const
+    {
+        return M_catchers;
     }
 
 private:
@@ -119,7 +140,6 @@ private:
                   const ConstPtr & prev_state );
     void setPlayer( const rcsc::rcg::PlayerT & player,
                     const ConstPtr & prev_state );
-    void setKickers();
 };
 
 #endif

@@ -62,7 +62,7 @@ public:
     void updateGameMode( const rcsc::PlayMode pmode );
     void updateScore( const int score_l,
                       const int score_r );
-                      
+
     void appendState( const rcsc::rcg::ShowInfoT & show );
     void appendState( FieldState::Ptr ptr );
 

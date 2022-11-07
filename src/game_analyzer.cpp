@@ -60,7 +60,7 @@ GameAnalyzer::analyze( const FieldModel & model )
         extractKickEvent( model, i );
     }
 
-    extractShootEvent( model );
+    //extractShootEvent( model );
     extractPassEvent( model );
 
     return true;
@@ -196,74 +196,199 @@ GameAnalyzer::extractShootEvent( const FieldModel & model )
     }
 }
 
+namespace {
 
-/*-------------------------------------------------------------------*/
-/*!
-
- */
-void
-GameAnalyzer::extractPassEvent( const FieldModel & /*model*/ )
+bool
+exist_other_ball_collider( const CoachPlayerObject * kicker,
+                           const CoachPlayerObject::Cont & colliders )
 {
+    for ( const CoachPlayerObject * p : colliders )
+    {
+        if ( kicker != p )
+        {
+            return true;
+        }
+    }
 
-    // SideID last_kicker_side = NEUTRAL;
-    // int last_kicker_unum = Unum_Unknown;
-    // Vector2D last_kick_pos = Vector2D::INVALIDATED;
+    return false;
+}
 
-    // for ( const FieldState::Ptr & state : model.fieldStates() )
-    // {
-    //     if ( state->gameMode().isServerCycleStoppedMode() )
-    //     {
-    //         last_kicker_side = NEUTRAL;
-    //         last_kicker_unum = Unum_Unknown;
-    //         continue;
-    //     }
-
-    //     if ( ! state->gameMode().isTeamsSetPlay( last_kicker_side ) )
-    //     {
-    //         last_kicker_side = NEUTRAL;
-    //         last_kicker_unum = Unum_Unknown;
-    //         continue;
-    //     }
-
-    //     if ( state->kickers().size() != 1 )
-    //     {
-    //         last_kicker_side = NEUTRAL;
-    //         last_kicker_unum = Unum_Unknown;
-    //         continue;
-    //     }
-
-    //     const CoachPlayerObject * kicker = state->kickers().front();
-    //     if ( last_kicker_side != kicker->side() )
-    //     {
-    //         last_kicker_side = kicker->side();
-    //         last_kicker_unum = kicker->unum();
-    //         continue;
-    //     }
-
-    //     if ( state->gameMode().type() != GameMode::PlayOn )
-    //     {
-    //         continue;
-    //     }
-
-    //     if ( last_kicker_unum == kicker->unum() )
-    //     {
-    //         continue;
-    //     }
-
-    //     std::cerr << "INFO: (GameAnalyzer::extractPassEvent) detect pass "
-    //               << state->time()
-    //               << " kicker=" << side_str( last_kicker_side ) << " " << last_kicker_unum << std::endl;
-    // }
 }
 
 /*-------------------------------------------------------------------*/
 /*!
 
  */
-bool
-GameAnalyzer::print( const FieldModel & model ) const
+void
+GameAnalyzer::extractPassEvent( const FieldModel & model )
 {
-    printKickEvents( model );
+    GameTime last_kick_time( -1, 0 );
+    SideID last_kicker_side = NEUTRAL;
+    int last_kicker_unum = Unum_Unknown;
+    Vector2D last_kick_pos = Vector2D::INVALIDATED;
+
+    for ( size_t i = 1; i < model.fieldStates().size(); ++i )
+    {
+        const FieldState::ConstPtr prev_state = model.getState( i - 1 );
+        const FieldState::ConstPtr state = model.getState( i );
+
+        if ( ! prev_state ) continue;
+        if ( ! state ) continue;
+
+        if ( state->gameMode().type() != GameMode::PlayOn
+             && state->gameMode().type() != GameMode::GoalKick_ )
+        {
+            last_kick_time.assign( -1, 0 );
+            last_kicker_side = NEUTRAL;
+            last_kicker_unum = Unum_Unknown;
+            last_kick_pos = Vector2D::INVALIDATED;
+            continue;
+        }
+
+        if ( state->kickers().empty() )
+        {
+            continue;
+        }
+
+        const CoachPlayerObject * kicker =  state->kickers().front();
+        if ( state->kickers().size() == 1
+             && ! exist_other_ball_collider( kicker, state->ballColliders() )
+             && state->tacklers().empty()
+             && state->catchers().empty() )
+        {
+            if ( last_kicker_side == NEUTRAL )
+            {
+                // new kick sequence
+                std::cerr << "NewKickSequence? " << prev_state->time() << std::endl;
+            }
+            else if ( kicker->side() != last_kicker_side )
+            {
+                // interception
+                std::cerr << "Intercept? " << prev_state->time() << std::endl;
+            }
+            else if ( kicker->unum() == last_kicker_unum )
+            {
+                // hold or dribble dribble
+                std::cerr << "HoldOrDribble? " << prev_state->time() << std::endl;
+            }
+            else
+            {
+                // pass
+                std::cerr << "Pass? "
+                          << last_kick_time << "," << prev_state->time()
+                          << "," << side_str( last_kicker_side )
+                          << "," << ( last_kicker_side == LEFT ? model.leftTeamName()
+                                      : last_kicker_side == RIGHT ? model.rightTeamName()
+                                      : "Unknown" )
+                          << "," << last_kicker_unum
+                          << "," << kicker->unum()
+                          << std::endl;
+            }
+
+            last_kick_time = prev_state->time();
+            last_kicker_side = kicker->side();
+            last_kicker_unum = kicker->unum();
+            last_kick_pos = prev_state->ball().pos();
+        }
+        else
+        {
+            for ( const CoachPlayerObject * p : state->ballColliders() )
+            {
+                if ( p->side() != last_kicker_side )
+                {
+                    std::cerr << "Collide?" << std::endl;
+                }
+                else
+                {
+                    std::cerr << "Collide?" << std::endl;
+                }
+            }
+
+            for ( const CoachPlayerObject * p : state->kickers() )
+            {
+                if ( p->side() != last_kicker_side )
+                {
+                    std::cerr << "Intercept?" << std::endl;
+                }
+            }
+
+            for ( const CoachPlayerObject * p : state->tacklers() )
+            {
+                if ( p->side() != last_kicker_side )
+                {
+                    std::cerr << "Tackle?" << std::endl;
+                }
+            }
+
+            for ( const CoachPlayerObject * p : state->catchers() )
+            {
+                if ( p->side() != last_kicker_side )
+                {
+                    std::cerr << "Catch?" << std::endl;
+                }
+            }
+
+            // reset the kick sequence
+            last_kick_time.assign( -1, 0 );
+            last_kicker_side = NEUTRAL;
+            last_kicker_unum = Unum_Unknown;
+            last_kick_pos = Vector2D::INVALIDATED;
+        }
+    }
+}
+
+#if 0
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void
+GameAnalyzer::extractPassEventByKicks( const FieldModel & /*model*/ )
+{
+    Kick last_kick;
+    last_kick.side_ = NEUTRAL;
+
+    for ( const Kick & kick : M_kicks )
+    {
+        if ( kick.mode_.type() != GameMode::PlayOn )
+        {
+            last_kick = kick;
+            continue;
+        }
+
+        if ( kick.unum_ == last_kick.unum_ )
+        {
+            last_kick = kick;
+            continue;
+        }
+
+        if ( kick.side_ == NEUTRAL
+             || kick.side_ != last_kick.side_ )
+        {
+            std::cout << "Intercept?? "
+                      << last_kick.time_ << " " << side_str( last_kick.side_ ) << " " << last_kick.unum_ << " " << last_kick.pos_ << " -> "
+                      << kick.time_ << " " << side_str( kick.side_ ) << " " << kick.unum_ << " " << last_kick.pos_ << std::endl;
+        }
+        else
+        {
+            std::cout << "Pass?? "
+                      << last_kick.time_ << " " << side_str( last_kick.side_ ) << " " << last_kick.unum_ << " " << last_kick.pos_ << " -> "
+                      << kick.time_ << " " << side_str( kick.side_ ) << " " << kick.unum_ << " " << last_kick.pos_ << std::endl;
+        }
+
+        last_kick = kick;
+    }
+}
+#endif
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+bool
+GameAnalyzer::print( const FieldModel & /*model*/ ) const
+{
+    //printKickEvents( model );
     //    printShootEvents( model );
     return true;
 }

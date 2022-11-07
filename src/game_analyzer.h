@@ -61,6 +61,7 @@ private:
 
     void extractShootEvent( const FieldModel & model );
     void extractPassEvent( const FieldModel & model );
+    void extractPassEventByKick( const FieldModel & model );
 
     bool printKickEvents( const FieldModel & model ) const;
     bool printShootEvents( const FieldModel & model ) const;

@@ -79,8 +79,6 @@ FieldState::FieldState( const GameTime & time,
     {
         setPlayer( show.player_[i], prev_state );
     }
-
-    setKickers();
 }
 
 /*-------------------------------------------------------------------*/
@@ -211,22 +209,24 @@ FieldState::setPlayer( const PlayerT & player,
             M_right_players_array[p->unum() - 1] = p;
         }
     }
-}
 
-/*-------------------------------------------------------------------*/
-/*!
-
- */
-void
-FieldState::setKickers()
-{
-    for ( const auto & p : M_all_players )
+    if ( player.isCollidedBall() )
     {
-        if ( p->isKicking()
-             //|| p->tackleCycle() == 1
-             )
-        {
-            M_kickers.push_back( p );
-        }
+        M_ball_colliders.push_back( p );
+    }
+
+    if ( player.isKicking() )
+    {
+        M_kickers.push_back( p );
+    }
+
+    if ( player.isTackling() )
+    {
+        M_tacklers.push_back( p );
+    }
+
+    if ( player.isCatching() )
+    {
+        M_catchers.push_back( p );
     }
 }
