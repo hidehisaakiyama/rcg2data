@@ -223,7 +223,8 @@ FieldState::setKickers()
     for ( const auto & p : M_all_players )
     {
         if ( p->isKicking()
-             || p->tackleCycle() == 1 )
+             //|| p->tackleCycle() == 1
+             )
         {
             M_kickers.push_back( p );
         }
