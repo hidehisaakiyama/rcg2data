@@ -191,7 +191,7 @@ GameAnalyzer::extractShootEvent( const FieldModel & model )
             if ( kicker_side != NEUTRAL
                  && start_pos.isValid() )
             {
-                ActionEvent::Ptr ptr( new Shoot( kicker_side, kicker_unum, start_time, start_pos, end_time, end_pos, true ) );
+                ActionEvent::ConstPtr ptr( new Shoot( kicker_side, kicker_unum, start_time, start_pos, end_time, end_pos, true ) );
                 M_shoot_events.emplace_back( ptr );
             }
         }
@@ -469,7 +469,7 @@ GameAnalyzer::printShootEvents( const FieldModel & model ) const
               << "EndTime,"
               << "EndX,"
               << "EndY\n";
-    for ( const ActionEvent::Ptr & ev : M_shoot_events )
+    for ( const ActionEvent::ConstPtr & ev : M_shoot_events )
     {
         std::cout << "Shoot,"
                   << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','
@@ -499,7 +499,7 @@ GameAnalyzer::printPassEvents( const FieldModel & model ) const
     const std::string team_l = model.leftTeamName();
     const std::string team_r = model.rightTeamName();
 
-    for ( const ActionEvent::Ptr & ev : M_pass_events )
+    for ( const ActionEvent::ConstPtr & ev : M_pass_events )
     {
         std::cout << "Pass,"
                   << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','

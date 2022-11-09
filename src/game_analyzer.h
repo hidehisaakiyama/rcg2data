@@ -63,17 +63,19 @@ private:
     };
 
     struct KickSequence {
+        using Ptr = std::shared_ptr< KickSequence >;
+
         rcsc::SideID side_;
         std::vector< Kick::ConstPtr > kicks_;
     };
 
     std::vector< Kick::ConstPtr > M_single_kicks;
 
-    std::vector< std::shared_ptr< KickSequence > > M_kick_sequences;
+    std::vector< KickSequence::Ptr > M_kick_sequences;
 
-    std::vector< ActionEvent::Ptr > M_shoot_events;
-    std::vector< ActionEvent::Ptr > M_pass_events;
-    std::vector< ActionEvent::Ptr > M_intercept_events;
+    std::vector< ActionEvent::ConstPtr > M_shoot_events;
+    std::vector< ActionEvent::ConstPtr > M_pass_events;
+    std::vector< ActionEvent::ConstPtr > M_intercept_events;
 public:
     GameAnalyzer();
 

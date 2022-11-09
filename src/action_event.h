@@ -36,7 +36,8 @@
 class ActionEvent {
 public:
 
-    typedef std::shared_ptr< ActionEvent > Ptr;
+    using Ptr = std::shared_ptr< ActionEvent >;
+    using ConstPtr = std::shared_ptr< const ActionEvent >;
 
     // Action types defined in SPADL
     // https://socceraction.readthedocs.io/en/latest/documentation/SPADL_definitions.html
