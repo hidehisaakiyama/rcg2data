@@ -34,6 +34,9 @@ class GameAnalyzer {
 private:
 
     struct Kick {
+        using Ptr = std::shared_ptr< Kick >;
+        using ConstPtr = std::shared_ptr< const Kick >;
+
         size_t index_; // index of the states
         rcsc::SideID side_;
         int unum_;
@@ -41,9 +44,32 @@ private:
         rcsc::GameMode mode_;
         rcsc::Vector2D pos_;
         rcsc::Vector2D vel_;
+
+        Kick( size_t index,
+              const rcsc::SideID side,
+              const int unum,
+              const rcsc::GameTime & time,
+              const rcsc::GameMode & mode,
+              const rcsc::Vector2D & pos,
+              const rcsc::Vector2D & vel )
+            : index_( index ),
+              side_( side ),
+              unum_( unum ),
+              time_( time ),
+              mode_( mode ),
+              pos_( pos ),
+              vel_( vel )
+        { }
     };
 
-    std::vector< Kick > M_kicks;
+    struct KickSequence {
+        rcsc::SideID side_;
+        std::vector< Kick::ConstPtr > kicks_;
+    };
+
+    std::vector< Kick::ConstPtr > M_single_kicks;
+
+    std::vector< std::shared_ptr< KickSequence > > M_kick_sequences;
 
     std::vector< ActionEvent::Ptr > M_shoot_events;
     std::vector< ActionEvent::Ptr > M_pass_events;
@@ -61,6 +87,7 @@ private:
 
     void extractShootEvent( const FieldModel & model );
     void extractPassEvent( const FieldModel & model );
+    void extractPassEventSimple( const FieldModel & model );
     void extractPassEventByKick( const FieldModel & model );
 
     bool printKickEvents( const FieldModel & model ) const;

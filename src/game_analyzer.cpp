@@ -87,6 +87,14 @@ GameAnalyzer::extractKickEvent( const FieldModel & model,
         return;
     }
 
+    if ( state->kickers().size() > 1
+         || ! state->tacklers().empty()
+         || ! state->catchers().empty() )
+    {
+        // not a single kick
+        return;
+    }
+
     FieldState::ConstPtr prev_state = model.getState( idx - 1 );
 
     if ( ! prev_state )
@@ -94,6 +102,8 @@ GameAnalyzer::extractKickEvent( const FieldModel & model,
         std::cerr << "ERROR: (GameAnalyzer::extractKickEvent) no previous state at " << idx << std::endl;
         return;
     }
+
+    const CoachPlayerObject * kicker = state->kickers().front();
 
     // check the ball volocity to confirm the successful kick
     // (prev_vel + accel + error) * decay = vel
@@ -113,20 +123,14 @@ GameAnalyzer::extractKickEvent( const FieldModel & model,
         return;
     }
 
-    Kick kick;
-    kick.index_ = idx - 1;
-    kick.side_ = state->kickers().size() == 1
-        ? state->kickers().front()->side()
-        : NEUTRAL;
-    kick.unum_ = state->kickers().size() == 1
-        ? state->kickers().front()->unum()
-        : Unum_Unknown;
-    kick.time_ = prev_state->time();
-    kick.mode_ = prev_state->gameMode();
-    kick.pos_ = prev_state->ball().pos();
-    kick.vel_ = state->ball().vel() / ServerParam::i().ballDecay();
-
-    M_kicks.push_back( kick );
+    Kick::ConstPtr kick( new Kick( idx - 1,
+                                   kicker->side(),
+                                   kicker->unum(),
+                                   prev_state->time(),
+                                   prev_state->gameMode(),
+                                   prev_state->ball().pos(),
+                                   ( state->ball().pos() - prev_state->ball().pos() ) ) );
+    M_single_kicks.push_back( kick );
 }
 
 /*-------------------------------------------------------------------*/
@@ -196,6 +200,17 @@ GameAnalyzer::extractShootEvent( const FieldModel & model )
     }
 }
 
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+void
+GameAnalyzer::extractPassEvent( const FieldModel & model )
+{
+    extractPassEventSimple( model );
+}
+
 namespace {
 
 bool
@@ -220,7 +235,7 @@ exist_other_ball_collider( const CoachPlayerObject * kicker,
 
  */
 void
-GameAnalyzer::extractPassEvent( const FieldModel & model )
+GameAnalyzer::extractPassEventSimple( const FieldModel & model )
 {
     GameTime last_kick_time( -1, 0 );
     SideID last_kicker_side = NEUTRAL;
@@ -348,7 +363,7 @@ GameAnalyzer::extractPassEventByKicks( const FieldModel & /*model*/ )
     Kick last_kick;
     last_kick.side_ = NEUTRAL;
 
-    for ( const Kick & kick : M_kicks )
+    for ( const Kick::ConstPtr & kick : M_single_kicks )
     {
         if ( kick.mode_.type() != GameMode::PlayOn )
         {
@@ -414,20 +429,20 @@ GameAnalyzer::printKickEvents( const FieldModel & model ) const
               << "VelX,"
               << "VelY"
               << std::endl;
-    for ( const Kick & k : M_kicks )
+    for ( const Kick::ConstPtr & k : M_single_kicks )
     {
-        const std::string team = ( k.side_ == LEFT ? team_l
-                                   : k.side_ == RIGHT ? team_r
+        const std::string team = ( k->side_ == LEFT ? team_l
+                                   : k->side_ == RIGHT ? team_r
                                    : unknown );
         std::cout << "Kick,"
                   << team << ','
-                  << side_char( k.side_ ) << ','
-                  << k.unum_ << ','
-                  << k.time_.cycle() << ','
-                  << k.pos_.x << ','
-                  << k.pos_.y << ','
-                  << k.vel_.x << ','
-                  << k.vel_.y << ','
+                  << side_char( k->side_ ) << ','
+                  << k->unum_ << ','
+                  << k->time_.cycle() << ','
+                  << k->pos_.x << ','
+                  << k->pos_.y << ','
+                  << k->vel_.x << ','
+                  << k->vel_.y << ','
                   << '\n';
     }
 
