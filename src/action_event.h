@@ -162,4 +162,29 @@ public:
 
 };
 
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class Interception
+    : public ActionEvent {
+private:
+
+public:
+
+    Interception( const rcsc::SideID kicker_side,
+                  const int kicker_unum,
+                  const rcsc::GameTime & start_time,
+                  const rcsc::Vector2D & start_pos,
+                  const rcsc::SideID receiver_side,
+                  const int receiver_unum,
+                  const rcsc::GameTime & end_time,
+                  const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const;
+
+};
+
+
 #endif

@@ -211,6 +211,8 @@ GameAnalyzer::extractPassEvent( const FieldModel & model )
     extractPassEventSimple( model );
 }
 
+
+/*-------------------------------------------------------------------*/
 namespace {
 
 bool
@@ -271,6 +273,8 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
              && state->tacklers().empty()
              && state->catchers().empty() )
         {
+            // only 1 kicker
+
             if ( last_kicker_side == NEUTRAL )
             {
                 // new kick sequence
@@ -307,11 +311,13 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
         }
         else
         {
+            // Several players touch the ball
+
             for ( const CoachPlayerObject * p : state->ballColliders() )
             {
                 if ( p->side() != last_kicker_side )
                 {
-                    std::cerr << "Collide?" << std::endl;
+                    std::cerr << "Collide? and Intercept?" << std::endl;
                 }
                 else
                 {
