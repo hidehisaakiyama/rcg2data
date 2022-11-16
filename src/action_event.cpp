@@ -68,11 +68,11 @@ ActionEvent::printCSV( std::ostream & os ) const
     os << actionName() << ','
        << side_str( startPlayerSide() ) << ','
        << startPlayerUnum() << ','
-       << startTime() << ','
+       << startTime().cycle() << ','
        << startPos().x << ',' << startPos().y << ','
        << side_str( endPlayerSide() ) << ','
        << endPlayerUnum() << ','
-       << endTime() << ','
+       << endTime().cycle() << ','
        << endPos().x << ',' << endPos().y << ','
        << std::boolalpha << isSuccess() << '\n';
 
