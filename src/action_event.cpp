@@ -60,6 +60,25 @@ ActionEvent::ActionEvent( const Type action_type,
 
 }
 
+
+/*-------------------------------------------------------------------*/
+std::ostream &
+ActionEvent::printCSV( std::ostream & os ) const
+{
+    os << actionName() << ','
+       << side_str( startPlayerSide() ) << ','
+       << startPlayerUnum() << ','
+       << startTime() << ','
+       << startPos().x << ',' << startPos().y << ','
+       << side_str( endPlayerSide() ) << ','
+       << endPlayerUnum() << ','
+       << endTime() << ','
+       << endPos().x << ',' << endPos().y << ','
+       << std::boolalpha << isSuccess() << '\n';
+
+    return os;
+}
+
 /*-------------------------------------------------------------------*/
 /*-------------------------------------------------------------------*/
 /*-------------------------------------------------------------------*/
@@ -131,7 +150,6 @@ Pass::actionName() const
 {
     return "Pass";
 }
-
 
 /*-------------------------------------------------------------------*/
 /*-------------------------------------------------------------------*/

@@ -113,7 +113,11 @@ public:
     const rcsc::Vector2D & endPos() const { return M_end_pos; }
     bool isSuccess() const { return M_success; }
 
-    virtual const char * actionName() const = 0;
+    virtual
+    const char * actionName() const = 0;
+
+    virtual
+    std::ostream & printCSV( std::ostream & os ) const;
 };
 
 /*-------------------------------------------------------------------*/

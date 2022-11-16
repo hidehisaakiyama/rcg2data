@@ -73,9 +73,12 @@ private:
 
     std::vector< KickSequence::Ptr > M_kick_sequences;
 
-    std::vector< ActionEvent::ConstPtr > M_shoot_events;
-    std::vector< ActionEvent::ConstPtr > M_pass_events;
-    std::vector< ActionEvent::ConstPtr > M_interception_events;
+    std::vector< ActionEvent::ConstPtr > M_action_events;
+
+    // std::vector< ActionEvent::ConstPtr > M_shoot_events;
+    // std::vector< ActionEvent::ConstPtr > M_pass_events;
+    // std::vector< ActionEvent::ConstPtr > M_interception_events;
+
 public:
     GameAnalyzer();
 
@@ -93,8 +96,7 @@ private:
     void extractPassEventByKick( const FieldModel & model );
 
     bool printKickEvents( const FieldModel & model ) const;
-    bool printShootEvents( const FieldModel & model ) const;
-    bool printPassEvents( const FieldModel & model ) const;
+    bool printActionEvents() const;
 };
 
 #endif

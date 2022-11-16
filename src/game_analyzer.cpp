@@ -192,7 +192,7 @@ GameAnalyzer::extractShootEvent( const FieldModel & model )
                  && start_pos.isValid() )
             {
                 ActionEvent::ConstPtr ptr( new Shoot( kicker_side, kicker_unum, start_time, start_pos, end_time, end_pos, true ) );
-                M_shoot_events.emplace_back( ptr );
+                M_action_events.push_back( ptr );
             }
         }
 
@@ -284,11 +284,11 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
             {
                 // interception
                 //std::cerr << "Intercept? " << prev_state->time() << std::endl;
-                ActionEvent::Ptr intercept( new Interception(  last_kicker_side, last_kicker_unum,
-                                                               last_kick_time, last_kick_pos,
-                                                               kicker->side(), kicker->unum(),
-                                                               prev_state->time(), prev_state->ball().pos() ) );
-                M_interception_events.push_back( intercept );
+                ActionEvent::ConstPtr intercept( new Interception(  last_kicker_side, last_kicker_unum,
+                                                                    last_kick_time, last_kick_pos,
+                                                                    kicker->side(), kicker->unum(),
+                                                                    prev_state->time(), prev_state->ball().pos() ) );
+                M_action_events.push_back( intercept );
             }
             else if ( kicker->unum() == last_kicker_unum )
             {
@@ -307,12 +307,12 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
                 //           << "," << last_kicker_unum
                 //           << "," << kicker->unum()
                 //           << std::endl;
-                ActionEvent::Ptr pass( new Pass( last_kicker_side, last_kicker_unum,
-                                                 last_kick_time, last_kick_pos,
-                                                 kicker->side(), kicker->unum(),
-                                                 prev_state->time(), prev_state->ball().pos(),
-                                                 true ) );
-                M_pass_events.push_back( pass );
+                ActionEvent::ConstPtr pass( new Pass( last_kicker_side, last_kicker_unum,
+                                                      last_kick_time, last_kick_pos,
+                                                      kicker->side(), kicker->unum(),
+                                                      prev_state->time(), prev_state->ball().pos(),
+                                                      true ) );
+                M_action_events.push_back( pass );
             }
 
             last_kick_time = prev_state->time();
@@ -323,67 +323,70 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
         else
         {
             // Several players touch the ball
-            ActionEvent::Ptr intercept;
-
-            for ( const CoachPlayerObject * p : state->ballColliders() )
+            if ( last_kicker_side != NEUTRAL )
             {
-                if ( p->side() != last_kicker_side )
-                {
-                    //std::cerr << "Collide? and Intercept?" << std::endl;
-                    intercept = ActionEvent::Ptr( new Interception(  last_kicker_side, last_kicker_unum,
-                                                                     last_kick_time, last_kick_pos,
-                                                                     p->side(), p->unum(),
-                                                                     prev_state->time(), prev_state->ball().pos() ) );
-                    break;
-                }
-                else
-                {
-                    //std::cerr << "Collide but same side?" << std::endl;
-                }
-            }
+                ActionEvent::ConstPtr intercept;
 
-            for ( const CoachPlayerObject * p : state->tacklers() )
-            {
-                if ( p->side() != last_kicker_side )
+                for ( const CoachPlayerObject * p : state->ballColliders() )
                 {
-                    //std::cerr << "Tackle?" << std::endl;
-                    intercept = ActionEvent::Ptr( new Interception( last_kicker_side, last_kicker_unum,
-                                                                    last_kick_time, last_kick_pos,
-                                                                    p->side(), p->unum(),
-                                                                    prev_state->time(), prev_state->ball().pos() ) );
-                    break;
+                    if ( p->side() != last_kicker_side )
+                    {
+                        //std::cerr << "Collide? and Intercept?" << std::endl;
+                        intercept = ActionEvent::ConstPtr( new Interception(  last_kicker_side, last_kicker_unum,
+                                                                              last_kick_time, last_kick_pos,
+                                                                              p->side(), p->unum(),
+                                                                              prev_state->time(), prev_state->ball().pos() ) );
+                        break;
+                    }
+                    else
+                    {
+                        //std::cerr << "Collide but same side?" << std::endl;
+                    }
                 }
-            }
 
-            for ( const CoachPlayerObject * p : state->catchers() )
-            {
-                if ( p->side() != last_kicker_side )
+                for ( const CoachPlayerObject * p : state->tacklers() )
                 {
-                    //std::cerr << "Catch?" << std::endl;
-                    intercept = ActionEvent::Ptr( new Interception( last_kicker_side, last_kicker_unum,
-                                                                    last_kick_time, last_kick_pos,
-                                                                    p->side(), p->unum(),
-                                                                    prev_state->time(), prev_state->ball().pos() ) );
-                    break;
+                    if ( p->side() != last_kicker_side )
+                    {
+                        //std::cerr << "Tackle?" << std::endl;
+                        intercept = ActionEvent::ConstPtr( new Interception( last_kicker_side, last_kicker_unum,
+                                                                             last_kick_time, last_kick_pos,
+                                                                             p->side(), p->unum(),
+                                                                             prev_state->time(), prev_state->ball().pos() ) );
+                        break;
+                    }
                 }
-            }
 
-            for ( const CoachPlayerObject * p : state->kickers() )
-            {
-                if ( p->side() != last_kicker_side )
+                for ( const CoachPlayerObject * p : state->catchers() )
                 {
-                    //std::cerr << "Intercept?" << std::endl;
-                    intercept = ActionEvent::Ptr( new Interception( last_kicker_side, last_kicker_unum,
-                                                                    last_kick_time, last_kick_pos,
-                                                                    p->side(), p->unum(),
-                                                                    prev_state->time(), prev_state->ball().pos() ) );
-                    break;
+                    if ( p->side() != last_kicker_side )
+                    {
+                        //std::cerr << "Catch?" << std::endl;
+                        intercept = ActionEvent::ConstPtr( new Interception( last_kicker_side, last_kicker_unum,
+                                                                             last_kick_time, last_kick_pos,
+                                                                             p->side(), p->unum(),
+                                                                             prev_state->time(), prev_state->ball().pos() ) );
+                        break;
+                    }
                 }
-            }
 
-            if ( intercept )
-            {
-                M_interception_events.push_back( intercept );
+                for ( const CoachPlayerObject * p : state->kickers() )
+                {
+                    if ( p->side() != last_kicker_side )
+                    {
+                        //std::cerr << "Intercept?" << std::endl;
+                        intercept = ActionEvent::ConstPtr( new Interception( last_kicker_side, last_kicker_unum,
+                                                                             last_kick_time, last_kick_pos,
+                                                                             p->side(), p->unum(),
+                                                                             prev_state->time(), prev_state->ball().pos() ) );
+                        break;
+                    }
+                }
+
+                if ( intercept )
+                {
+                    M_action_events.push_back( intercept );
+                }
             }
 
             // reset the kick sequence
@@ -446,8 +449,7 @@ GameAnalyzer::extractPassEventByKicks( const FieldModel & /*model*/ )
 bool
 GameAnalyzer::print( const FieldModel & /*model*/ ) const
 {
-    //printKickEvents( model );
-    //    printShootEvents( model );
+    printActionEvents();
     return true;
 }
 
@@ -493,68 +495,71 @@ GameAnalyzer::printKickEvents( const FieldModel & model ) const
 }
 
 /*-------------------------------------------------------------------*/
-/*!
-
- */
 bool
-GameAnalyzer::printShootEvents( const FieldModel & model ) const
+GameAnalyzer::printActionEvents() const
 {
-    const std::string team_l = model.leftTeamName();
-    const std::string team_r = model.rightTeamName();
-
-    std::cout << "Type,"
-              << "TeamName,"
-              << "Side,"
-              << "Kicker,"
-              << "StartTime,"
-              << "StartX,"
-              << "StartY,"
-              << "EndTime,"
-              << "EndX,"
-              << "EndY\n";
-    for ( const ActionEvent::ConstPtr & ev : M_shoot_events )
+    for ( const ActionEvent::ConstPtr & action : M_action_events )
     {
-        std::cout << "Shoot,"
-                  << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','
-                  << side_char( ev->startPlayerSide() ) << ','
-                  << ev->startPlayerUnum() << ','
-                  << ev->startTime().cycle() << ','
-                  << ev->startPos().x << ','
-                  << ev->startPos().y << ','
-                  << ev->endTime().cycle() << ','
-                  << ev->endPos().x << ','
-                  << ev->endPos().y << '\n';
-    }
-
-    std::cout << std::flush;
-
-    return true;
-}
-
-
-/*-------------------------------------------------------------------*/
-/*!
-
- */
-bool
-GameAnalyzer::printPassEvents( const FieldModel & model ) const
-{
-    const std::string team_l = model.leftTeamName();
-    const std::string team_r = model.rightTeamName();
-
-    for ( const ActionEvent::ConstPtr & ev : M_pass_events )
-    {
-        std::cout << "Pass,"
-                  << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','
-                  << side_char( ev->startPlayerSide() ) << ','
-                  << ev->startPlayerUnum() << ','
-                  << ev->startTime().cycle() << ','
-                  << ev->startPos().x << ','
-                  << ev->startPos().y << ','
-                  << ev->endTime().cycle() << ','
-                  << ev->endPos().x << ','
-                  << ev->endPos().y << '\n';
+        action->printCSV( std::cout );
     }
 
     return true;
 }
+
+// bool
+// GameAnalyzer::printShootEvents( const FieldModel & model ) const
+// {
+//     const std::string team_l = model.leftTeamName();
+//     const std::string team_r = model.rightTeamName();
+
+//     std::cout << "Type,"
+//               << "TeamName,"
+//               << "Side,"
+//               << "Kicker,"
+//               << "StartTime,"
+//               << "StartX,"
+//               << "StartY,"
+//               << "EndTime,"
+//               << "EndX,"
+//               << "EndY\n";
+//     for ( const ActionEvent::ConstPtr & ev : M_shoot_events )
+//     {
+//         std::cout << "Shoot,"
+//                   << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','
+//                   << side_char( ev->startPlayerSide() ) << ','
+//                   << ev->startPlayerUnum() << ','
+//                   << ev->startTime().cycle() << ','
+//                   << ev->startPos().x << ','
+//                   << ev->startPos().y << ','
+//                   << ev->endTime().cycle() << ','
+//                   << ev->endPos().x << ','
+//                   << ev->endPos().y << '\n';
+//     }
+
+//     std::cout << std::flush;
+
+//     return true;
+// }
+
+// bool
+// GameAnalyzer::printPassEvents( const FieldModel & model ) const
+// {
+//     const std::string team_l = model.leftTeamName();
+//     const std::string team_r = model.rightTeamName();
+
+//     for ( const ActionEvent::ConstPtr & ev : M_pass_events )
+//     {
+//         std::cout << "Pass,"
+//                   << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','
+//                   << side_char( ev->startPlayerSide() ) << ','
+//                   << ev->startPlayerUnum() << ','
+//                   << ev->startTime().cycle() << ','
+//                   << ev->startPos().x << ','
+//                   << ev->startPos().y << ','
+//                   << ev->endTime().cycle() << ','
+//                   << ev->endPos().x << ','
+//                   << ev->endPos().y << '\n';
+//     }
+
+//     return true;
+// }
