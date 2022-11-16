@@ -278,30 +278,41 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
             if ( last_kicker_side == NEUTRAL )
             {
                 // new kick sequence
-                std::cerr << "NewKickSequence? " << prev_state->time() << std::endl;
+                //std::cerr << "NewKickSequence? " << prev_state->time() << std::endl;
             }
             else if ( kicker->side() != last_kicker_side )
             {
                 // interception
-                std::cerr << "Intercept? " << prev_state->time() << std::endl;
+                //std::cerr << "Intercept? " << prev_state->time() << std::endl;
+                ActionEvent::Ptr intercept( new Interception(  last_kicker_side, last_kicker_unum,
+                                                               last_kick_time, last_kick_pos,
+                                                               kicker->side(), kicker->unum(),
+                                                               prev_state->time(), prev_state->ball().pos() ) );
+                M_interception_events.push_back( intercept );
             }
             else if ( kicker->unum() == last_kicker_unum )
             {
                 // hold or dribble dribble
-                std::cerr << "HoldOrDribble? " << prev_state->time() << std::endl;
+                //std::cerr << "HoldOrDribble? " << prev_state->time() << std::endl;
             }
             else
             {
                 // pass
-                std::cerr << "Pass? "
-                          << last_kick_time << "," << prev_state->time()
-                          << "," << side_str( last_kicker_side )
-                          << "," << ( last_kicker_side == LEFT ? model.leftTeamName()
-                                      : last_kicker_side == RIGHT ? model.rightTeamName()
-                                      : "Unknown" )
-                          << "," << last_kicker_unum
-                          << "," << kicker->unum()
-                          << std::endl;
+                // std::cerr << "Pass? "
+                //           << last_kick_time << "," << prev_state->time()
+                //           << "," << side_str( last_kicker_side )
+                //           << "," << ( last_kicker_side == LEFT ? model.leftTeamName()
+                //                       : last_kicker_side == RIGHT ? model.rightTeamName()
+                //                       : "Unknown" )
+                //           << "," << last_kicker_unum
+                //           << "," << kicker->unum()
+                //           << std::endl;
+                ActionEvent::Ptr pass( new Pass( last_kicker_side, last_kicker_unum,
+                                                 last_kick_time, last_kick_pos,
+                                                 kicker->side(), kicker->unum(),
+                                                 prev_state->time(), prev_state->ball().pos(),
+                                                 true ) );
+                M_pass_events.push_back( pass );
             }
 
             last_kick_time = prev_state->time();
@@ -312,24 +323,22 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
         else
         {
             // Several players touch the ball
+            ActionEvent::Ptr intercept;
 
             for ( const CoachPlayerObject * p : state->ballColliders() )
             {
                 if ( p->side() != last_kicker_side )
                 {
-                    std::cerr << "Collide? and Intercept?" << std::endl;
+                    //std::cerr << "Collide? and Intercept?" << std::endl;
+                    intercept = ActionEvent::Ptr( new Interception(  last_kicker_side, last_kicker_unum,
+                                                                     last_kick_time, last_kick_pos,
+                                                                     p->side(), p->unum(),
+                                                                     prev_state->time(), prev_state->ball().pos() ) );
+                    break;
                 }
                 else
                 {
-                    std::cerr << "Collide?" << std::endl;
-                }
-            }
-
-            for ( const CoachPlayerObject * p : state->kickers() )
-            {
-                if ( p->side() != last_kicker_side )
-                {
-                    std::cerr << "Intercept?" << std::endl;
+                    //std::cerr << "Collide but same side?" << std::endl;
                 }
             }
 
@@ -337,7 +346,12 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
             {
                 if ( p->side() != last_kicker_side )
                 {
-                    std::cerr << "Tackle?" << std::endl;
+                    //std::cerr << "Tackle?" << std::endl;
+                    intercept = ActionEvent::Ptr( new Interception( last_kicker_side, last_kicker_unum,
+                                                                    last_kick_time, last_kick_pos,
+                                                                    p->side(), p->unum(),
+                                                                    prev_state->time(), prev_state->ball().pos() ) );
+                    break;
                 }
             }
 
@@ -345,8 +359,31 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
             {
                 if ( p->side() != last_kicker_side )
                 {
-                    std::cerr << "Catch?" << std::endl;
+                    //std::cerr << "Catch?" << std::endl;
+                    intercept = ActionEvent::Ptr( new Interception( last_kicker_side, last_kicker_unum,
+                                                                    last_kick_time, last_kick_pos,
+                                                                    p->side(), p->unum(),
+                                                                    prev_state->time(), prev_state->ball().pos() ) );
+                    break;
                 }
+            }
+
+            for ( const CoachPlayerObject * p : state->kickers() )
+            {
+                if ( p->side() != last_kicker_side )
+                {
+                    //std::cerr << "Intercept?" << std::endl;
+                    intercept = ActionEvent::Ptr( new Interception( last_kicker_side, last_kicker_unum,
+                                                                    last_kick_time, last_kick_pos,
+                                                                    p->side(), p->unum(),
+                                                                    prev_state->time(), prev_state->ball().pos() ) );
+                    break;
+                }
+            }
+
+            if ( intercept )
+            {
+                M_interception_events.push_back( intercept );
             }
 
             // reset the kick sequence

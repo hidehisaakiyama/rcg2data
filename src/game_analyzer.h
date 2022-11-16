@@ -75,7 +75,7 @@ private:
 
     std::vector< ActionEvent::ConstPtr > M_shoot_events;
     std::vector< ActionEvent::ConstPtr > M_pass_events;
-    std::vector< ActionEvent::ConstPtr > M_intercept_events;
+    std::vector< ActionEvent::ConstPtr > M_interception_events;
 public:
     GameAnalyzer();
 
