@@ -60,7 +60,6 @@ ActionEvent::ActionEvent( const Type action_type,
 
 }
 
-
 /*-------------------------------------------------------------------*/
 std::ostream &
 ActionEvent::printCSV( std::ostream & os ) const
@@ -76,6 +75,24 @@ ActionEvent::printCSV( std::ostream & os ) const
        << endPos().x << ',' << endPos().y << ','
        << std::boolalpha << isSuccess() << '\n';
 
+    return os;
+}
+
+/*-------------------------------------------------------------------*/
+std::ostream &
+ActionEvent::print_header_csv( std::ostream & os )
+{
+    os << "Type,"
+       << "Side1,"
+       << "Unum1,"
+       << "Time1,"
+       << "X1,Y1,"
+       << "Side2,"
+       << "Unum2,"
+       << "Time2,"
+       << "X2,Y2,"
+       << "Success"
+       << '\n';
     return os;
 }
 

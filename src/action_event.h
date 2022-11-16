@@ -118,6 +118,9 @@ public:
 
     virtual
     std::ostream & printCSV( std::ostream & os ) const;
+
+    static
+    std::ostream & print_header_csv( std::ostream & os );
 };
 
 /*-------------------------------------------------------------------*/

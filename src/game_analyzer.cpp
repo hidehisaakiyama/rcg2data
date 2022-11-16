@@ -498,6 +498,8 @@ GameAnalyzer::printKickEvents( const FieldModel & model ) const
 bool
 GameAnalyzer::printActionEvents() const
 {
+    ActionEvent::print_header_csv( std::cout );
+
     for ( const ActionEvent::ConstPtr & action : M_action_events )
     {
         action->printCSV( std::cout );
