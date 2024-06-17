@@ -48,41 +48,37 @@ public:
     RCGReader( FieldModel & field_model );
     ~RCGReader() = default;
 
-    virtual
-    bool handleLogVersion( const int ver );
+    bool handleLogVersion( const int ver ) override;
 
-    virtual
-    bool handleEOF();
+    bool handleEOF() override;
 
-    virtual
-    bool handleShow( const rcsc::rcg::ShowInfoT & show );
+    bool handleShow( const rcsc::rcg::ShowInfoT & show ) override;
 
-    virtual
     bool handleMsg( const int time,
                     const int board,
-                    const std::string & msg );
+                    const std::string & msg ) override;
 
-    virtual
     bool handleDraw( const int time,
-                     const rcsc::rcg::drawinfo_t & draw );
+                     const rcsc::rcg::drawinfo_t & draw ) override;
 
-    virtual
     bool handlePlayMode( const int time,
-                         const rcsc::PlayMode pm );
+                         const rcsc::PlayMode pm ) override;
 
-    virtual
     bool handleTeam( const int time,
                      const rcsc::rcg::TeamT & team_l,
-                     const rcsc::rcg::TeamT & team_r );
+                     const rcsc::rcg::TeamT & team_r ) override;
 
-    virtual
-    bool handleServerParam( const std::string & msg );
 
-    virtual
-    bool handlePlayerParam( const std::string & msg );
+    bool handleServerParam( const rcsc::rcg::ServerParamT & param ) override;
 
-    virtual
-    bool handlePlayerType( const std::string & msg );
+    bool handlePlayerParam( const rcsc::rcg::PlayerParamT & param ) override;
+
+    bool handlePlayerType( const rcsc::rcg::PlayerTypeT & param ) override;
+
+    bool handleTeamGraphic( const char side,
+                            const int x,
+                            const int y,
+                            const std::vector< std::string > & xpm_data ) override;
 
 };
 
