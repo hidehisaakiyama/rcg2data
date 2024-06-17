@@ -27,6 +27,7 @@
 #ifndef FIELD_STATE_H
 #define FIELD_STATE_H
 
+#include <rcsc/rcg/types.h>
 #include <rcsc/coach/coach_ball_object.h>
 #include <rcsc/coach/coach_player_object.h>
 #include <rcsc/game_mode.h>
