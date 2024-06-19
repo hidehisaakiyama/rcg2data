@@ -252,8 +252,11 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
         if ( ! prev_state ) continue;
         if ( ! state ) continue;
 
-        if ( state->gameMode().type() != GameMode::PlayOn
-             && state->gameMode().type() != GameMode::GoalKick_ )
+        if ( ( prev_state->gameMode().type() == GameMode::PlayOn
+               && state->gameMode().type() != GameMode::PlayOn )
+             ||  ( state->gameMode().type() != GameMode::PlayOn
+                   && state->gameMode().type() != GameMode::GoalKick_ )
+             )
         {
             last_kick_time.assign( -1, 0 );
             last_kicker_side = NEUTRAL;
