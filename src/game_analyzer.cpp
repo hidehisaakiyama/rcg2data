@@ -63,6 +63,13 @@ GameAnalyzer::analyze( const FieldModel & model )
     extractShootEvent( model );
     extractPassEvent( model );
 
+    std::sort( M_action_events.begin(), M_action_events.end(),
+               []( const ActionEvent::ConstPtr & lhs,
+                   const ActionEvent::ConstPtr & rhs )
+               {
+                   return lhs->startTime() < rhs->startTime();
+               } );
+
     return true;
 }
 
