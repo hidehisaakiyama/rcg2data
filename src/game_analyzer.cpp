@@ -60,7 +60,7 @@ GameAnalyzer::analyze( const FieldModel & model )
         extractKickEvent( model, i );
     }
 
-    //extractShootEvent( model );
+    extractShootEvent( model );
     extractPassEvent( model );
 
     return true;
@@ -151,7 +151,7 @@ GameAnalyzer::extractShootEvent( const FieldModel & model )
         if ( mode.type() != GameMode::AfterGoal_
              && s->gameMode().type() == GameMode::AfterGoal_ )
         {
-            std::cerr << "Detect shoot " << s->time() << std::endl;
+            //std::cerr << "Detect shoot " << s->time() << std::endl;
             SideID kicker_side = NEUTRAL;
             int kicker_unum = Unum_Unknown;
             Vector2D start_pos = Vector2D::INVALIDATED;
@@ -164,7 +164,7 @@ GameAnalyzer::extractShootEvent( const FieldModel & model )
             {
                 if ( ! states[j]->kickers().empty() )
                 {
-                    std::cerr << "Find shoot kicker " << states[j]->time() << std::endl;
+                    //std::cerr << "Find shoot kicker " << states[j]->time() << std::endl;
                     const rcsc::CoachPlayerObject * kicker = nullptr;
                     for ( CoachPlayerObject::Cont::const_iterator p = states[j]->kickers().begin();
                           p != states[j]->kickers().end();
