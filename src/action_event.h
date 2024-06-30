@@ -29,6 +29,7 @@
 
 #include <rcsc/geom/vector_2d.h>
 #include <rcsc/game_time.h>
+#include <rcsc/game_mode.h>
 #include <rcsc/types.h>
 
 #include <memory>
@@ -75,6 +76,7 @@ private:
     int M_start_player_unum;
 
     rcsc::GameTime M_start_time;
+    rcsc::GameMode M_start_mode;
     rcsc::Vector2D M_start_pos;
 
     rcsc::SideID M_end_player_side;
@@ -93,6 +95,7 @@ protected:
                  const rcsc::SideID start_player_side,
                  const int start_player_unum,
                  const rcsc::GameTime & start_time,
+                 const rcsc::GameMode & start_mode,
                  const rcsc::Vector2D & start_pos,
                  const rcsc::SideID end_player_side,
                  const int end_player_unum,
@@ -106,6 +109,7 @@ public:
     rcsc::SideID startPlayerSide() const { return M_start_player_side; }
     int startPlayerUnum() const { return M_start_player_unum; }
     const rcsc::GameTime & startTime() const { return M_start_time; }
+    const rcsc::GameMode & startMode() const { return M_start_mode; }
     const rcsc::Vector2D & startPos() const { return M_start_pos; }
     rcsc::SideID endPlayerSide() const { return M_end_player_side; }
     int endPlayerUnum() const { return M_end_player_unum; }
@@ -136,6 +140,7 @@ public:
     Shoot( const rcsc::SideID kicker_side,
            const int kicker_unum,
            const rcsc::GameTime & start_time,
+           const rcsc::GameMode & start_mode,
            const rcsc::Vector2D & start_pos,
            const rcsc::GameTime & end_time,
            const rcsc::Vector2D & end_pos,
@@ -158,6 +163,7 @@ public:
     Pass( const rcsc::SideID kicker_side,
           const int kicker_unum,
           const rcsc::GameTime & start_time,
+          const rcsc::GameMode & start_mode,
           const rcsc::Vector2D & start_pos,
           const rcsc::SideID receiver_side,
           const int receiver_unum,
@@ -183,6 +189,7 @@ public:
     Interception( const rcsc::SideID kicker_side,
                   const int kicker_unum,
                   const rcsc::GameTime & start_time,
+                  const rcsc::GameMode & start_mode,
                   const rcsc::Vector2D & start_pos,
                   const rcsc::SideID receiver_side,
                   const int receiver_unum,
