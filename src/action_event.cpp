@@ -40,6 +40,7 @@ ActionEvent::ActionEvent( const Type action_type,
                           const SideID start_player_side,
                           const int start_player_unum,
                           const GameTime & start_time,
+                          const GameMode & start_mode,
                           const Vector2D & start_pos,
                           const SideID end_player_side,
                           const int end_player_unum,
@@ -50,6 +51,7 @@ ActionEvent::ActionEvent( const Type action_type,
       M_start_player_side( start_player_side ),
       M_start_player_unum( start_player_unum ),
       M_start_time( start_time ),
+      M_start_mode( start_mode ),
       M_start_pos( start_pos ),
       M_end_player_side( end_player_side ),
       M_end_player_unum( end_player_unum ),
@@ -68,6 +70,7 @@ ActionEvent::printCSV( std::ostream & os ) const
        << side_str( startPlayerSide() ) << ','
        << startPlayerUnum() << ','
        << startTime().cycle() << ','
+       << startMode().toCString() << ','
        << startPos().x << ',' << startPos().y << ','
        << side_str( endPlayerSide() ) << ','
        << endPlayerUnum() << ','
@@ -86,6 +89,7 @@ ActionEvent::print_header_csv( std::ostream & os )
        << "Side1,"
        << "Unum1,"
        << "Time1,"
+       << "Mode1,"
        << "X1,Y1,"
        << "Side2,"
        << "Unum2,"
@@ -107,13 +111,14 @@ ActionEvent::print_header_csv( std::ostream & os )
 Shoot::Shoot( const SideID kicker_side,
               const int kicker_unum,
               const GameTime & start_time,
+              const GameMode & start_mode,
               const Vector2D & start_pos,
               const GameTime & end_time,
               const Vector2D & end_pos,
               const bool success )
     : ActionEvent( ActionEvent::Shot,
                    kicker_side, kicker_unum,
-                   start_time, start_pos,
+                   start_time, start_mode, start_pos,
                    NEUTRAL, Unum_Unknown,
                    end_time, end_pos,
                    success )
@@ -142,6 +147,7 @@ Shoot::actionName() const
 Pass::Pass( const SideID kicker_side,
             const int kicker_unum,
             const GameTime & start_time,
+            const GameMode & start_mode,
             const Vector2D & start_pos,
             const SideID receiver_side,
             const int receiver_unum,
@@ -150,7 +156,7 @@ Pass::Pass( const SideID kicker_side,
             const bool success )
     : ActionEvent( ActionEvent::Pass,
                    kicker_side, kicker_unum,
-                   start_time, start_pos,
+                   start_time, start_mode, start_pos,
                    receiver_side, receiver_unum,
                    end_time, end_pos,
                    success )
@@ -179,6 +185,7 @@ Pass::actionName() const
 Interception::Interception( const SideID kicker_side,
                             const int kicker_unum,
                             const GameTime & start_time,
+                            const GameMode & start_mode,
                             const Vector2D & start_pos,
                             const SideID receiver_side,
                             const int receiver_unum,
@@ -186,7 +193,7 @@ Interception::Interception( const SideID kicker_side,
                             const Vector2D & end_pos )
     : ActionEvent( ActionEvent::Pass,
                    kicker_side, kicker_unum,
-                   start_time, start_pos,
+                   start_time, start_mode, start_pos,
                    receiver_side, receiver_unum,
                    end_time, end_pos,
                    true )

@@ -163,6 +163,7 @@ GameAnalyzer::extractShootEvent( const FieldModel & model )
             int kicker_unum = Unum_Unknown;
             Vector2D start_pos = Vector2D::INVALIDATED;
             GameTime start_time;
+            GameMode start_mode;
             Vector2D end_pos = s->ball().pos();
             GameTime end_time = s->time();
 
@@ -190,6 +191,7 @@ GameAnalyzer::extractShootEvent( const FieldModel & model )
                         kicker_unum = kicker->unum();
                         start_pos = states[j - 1]->ball().pos();
                         start_time = states[j - 1]->time();
+                        start_mode = states[j - 1]->gameMode();
                         break;
                     }
                 }
@@ -198,7 +200,7 @@ GameAnalyzer::extractShootEvent( const FieldModel & model )
             if ( kicker_side != NEUTRAL
                  && start_pos.isValid() )
             {
-                ActionEvent::ConstPtr ptr( new Shoot( kicker_side, kicker_unum, start_time, start_pos, end_time, end_pos, true ) );
+                ActionEvent::ConstPtr ptr( new Shoot( kicker_side, kicker_unum, start_time, start_mode, start_pos, end_time, end_pos, true ) );
                 M_action_events.push_back( ptr );
             }
         }
@@ -247,6 +249,7 @@ void
 GameAnalyzer::extractPassEventSimple( const FieldModel & model )
 {
     GameTime last_kick_time( -1, 0 );
+    GameMode last_kick_mode;
     SideID last_kicker_side = NEUTRAL;
     int last_kicker_unum = Unum_Unknown;
     Vector2D last_kick_pos = Vector2D::INVALIDATED;
@@ -266,6 +269,7 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
              )
         {
             last_kick_time.assign( -1, 0 );
+            last_kick_mode = GameMode();
             last_kicker_side = NEUTRAL;
             last_kicker_unum = Unum_Unknown;
             last_kick_pos = Vector2D::INVALIDATED;
@@ -294,10 +298,10 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
             {
                 // interception
                 //std::cerr << "Intercept? " << prev_state->time() << std::endl;
-                ActionEvent::ConstPtr intercept( new Interception(  last_kicker_side, last_kicker_unum,
-                                                                    last_kick_time, last_kick_pos,
-                                                                    kicker->side(), kicker->unum(),
-                                                                    prev_state->time(), prev_state->ball().pos() ) );
+                ActionEvent::ConstPtr intercept( new Interception( last_kicker_side, last_kicker_unum,
+                                                                   last_kick_time, last_kick_mode, last_kick_pos,
+                                                                   kicker->side(), kicker->unum(),
+                                                                   prev_state->time(), prev_state->ball().pos() ) );
                 M_action_events.push_back( intercept );
             }
             else if ( kicker->unum() == last_kicker_unum )
@@ -318,7 +322,7 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
                 //           << "," << kicker->unum()
                 //           << std::endl;
                 ActionEvent::ConstPtr pass( new Pass( last_kicker_side, last_kicker_unum,
-                                                      last_kick_time, last_kick_pos,
+                                                      last_kick_time, last_kick_mode, last_kick_pos,
                                                       kicker->side(), kicker->unum(),
                                                       prev_state->time(), prev_state->ball().pos(),
                                                       true ) );
@@ -326,6 +330,7 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
             }
 
             last_kick_time = prev_state->time();
+            last_kick_mode = prev_state->gameMode();
             last_kicker_side = kicker->side();
             last_kicker_unum = kicker->unum();
             last_kick_pos = prev_state->ball().pos();
@@ -343,7 +348,7 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
                     {
                         //std::cerr << "Collide? and Intercept?" << std::endl;
                         intercept = ActionEvent::ConstPtr( new Interception(  last_kicker_side, last_kicker_unum,
-                                                                              last_kick_time, last_kick_pos,
+                                                                              last_kick_time, last_kick_mode, last_kick_pos,
                                                                               p->side(), p->unum(),
                                                                               prev_state->time(), prev_state->ball().pos() ) );
                         break;
@@ -360,7 +365,7 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
                     {
                         //std::cerr << "Tackle?" << std::endl;
                         intercept = ActionEvent::ConstPtr( new Interception( last_kicker_side, last_kicker_unum,
-                                                                             last_kick_time, last_kick_pos,
+                                                                             last_kick_time, last_kick_mode, last_kick_pos,
                                                                              p->side(), p->unum(),
                                                                              prev_state->time(), prev_state->ball().pos() ) );
                         break;
@@ -373,7 +378,7 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
                     {
                         //std::cerr << "Catch?" << std::endl;
                         intercept = ActionEvent::ConstPtr( new Interception( last_kicker_side, last_kicker_unum,
-                                                                             last_kick_time, last_kick_pos,
+                                                                             last_kick_time, last_kick_mode, last_kick_pos,
                                                                              p->side(), p->unum(),
                                                                              prev_state->time(), prev_state->ball().pos() ) );
                         break;
@@ -386,7 +391,7 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
                     {
                         //std::cerr << "Intercept?" << std::endl;
                         intercept = ActionEvent::ConstPtr( new Interception( last_kicker_side, last_kicker_unum,
-                                                                             last_kick_time, last_kick_pos,
+                                                                             last_kick_time, last_kick_mode, last_kick_pos,
                                                                              p->side(), p->unum(),
                                                                              prev_state->time(), prev_state->ball().pos() ) );
                         break;
@@ -401,6 +406,7 @@ GameAnalyzer::extractPassEventSimple( const FieldModel & model )
 
             // reset the kick sequence
             last_kick_time.assign( -1, 0 );
+            last_kick_mode = GameMode();
             last_kicker_side = NEUTRAL;
             last_kicker_unum = Unum_Unknown;
             last_kick_pos = Vector2D::INVALIDATED;
