@@ -61,7 +61,8 @@ RCGReader::handleLogVersion( const int ver )
 {
     Handler::handleLogVersion( ver );
 
-    if ( logVersion() <= 3 )
+    if ( logVersion() != REC_VERSION_JSON
+         && logVersion() <= 3 )
     {
         std::cerr << "Unsupported RCG version [" << ver << ']' << std::endl;
         return false;
