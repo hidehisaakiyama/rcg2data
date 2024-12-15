@@ -175,6 +175,29 @@ public:
 
 };
 
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class Tackle
+    : public ActionEvent {
+private:
+
+public:
+
+    Tackle( const rcsc::SideID start_ball_holder_side,
+            const int start_ball_holder_unum,
+            const rcsc::GameTime & start_time,
+            const rcsc::GameMode & start_mode,
+            const rcsc::Vector2D & start_pos,
+            const rcsc::SideID tackler_side,
+            const int tackler_unum,
+            const rcsc::GameTime & end_time,
+            const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const;
+
+};
 
 /*-------------------------------------------------------------------*/
 /*-------------------------------------------------------------------*/
@@ -201,6 +224,30 @@ public:
 };
 
 
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class KeeperSave
+    : public ActionEvent {
+private:
+
+public:
+
+    KeeperSave( const rcsc::SideID start_ball_holder_side,
+                const int start_ball_holder_unum,
+                const rcsc::GameTime & start_time,
+                const rcsc::GameMode & start_mode,
+                const rcsc::Vector2D & start_pos,
+                const rcsc::SideID keeper_side,
+                const int keeper_unum,
+                const rcsc::GameTime & end_time,
+                const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const;
+
+};
+
 
 /*-------------------------------------------------------------------*/
 /*-------------------------------------------------------------------*/
@@ -223,6 +270,5 @@ public:
     const char * actionName() const;
 
 };
-
 
 #endif
