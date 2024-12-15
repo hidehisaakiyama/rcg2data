@@ -210,3 +210,32 @@ Interception::actionName() const
 {
     return "Interception";
 }
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+Dribble::Dribble( const SideID kicker_side,
+                  const int kicker_unum,
+                  const GameTime & start_time,
+                  const GameMode & start_mode,
+                  const Vector2D & start_pos,
+                  const GameTime & end_time,
+                  const Vector2D & end_pos )
+    : ActionEvent( ActionEvent::Dribble,
+                   kicker_side, kicker_unum,
+                   start_time, start_mode, start_pos,
+                   kicker_side, kicker_unum,
+                   end_time, end_pos,
+                   true )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+const char *
+Dribble::actionName() const
+{
+    return "Dribble";
+}
