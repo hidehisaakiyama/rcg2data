@@ -488,8 +488,8 @@ GameAnalyzer::extractDribbleEvent( const FieldModel & model )
             continue;
         }
 
-        // multiple kickers -> reset last kicker
-        if ( state->kickers().size() >= 2 )
+        // exist tackling player -> reset
+        if ( ! state->tacklers().empty() )
         {
             last_kick.reset();
             kicker_pos = Vector2D::INVALIDATED;
@@ -500,6 +500,15 @@ GameAnalyzer::extractDribbleEvent( const FieldModel & model )
         // no kicking player
         if ( state->kickers().empty() )
         {
+            continue;
+        }
+
+        // multiple kickers -> reset last kicker
+        if ( state->kickers().size() >= 2 )
+        {
+            last_kick.reset();
+            kicker_pos = Vector2D::INVALIDATED;
+            kicker_dash_count = 0;
             continue;
         }
 
@@ -521,7 +530,7 @@ GameAnalyzer::extractDribbleEvent( const FieldModel & model )
         last_kick.reset();
         kicker_dash_count = 0;
 
-        // new kicker
+        // set kicker
         if ( ! last_kick.isValid() )
         {
             last_kick.assign( i - 1,
