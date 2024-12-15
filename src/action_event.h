@@ -201,4 +201,28 @@ public:
 };
 
 
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class Dribble
+    : public ActionEvent {
+private:
+
+public:
+
+    Dribble( const rcsc::SideID kicker_side,
+             const int kicker_unum,
+             const rcsc::GameTime & start_time,
+             const rcsc::GameMode & start_mode,
+             const rcsc::Vector2D & start_pos,
+             const rcsc::GameTime & end_time,
+             const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const;
+
+};
+
+
 #endif

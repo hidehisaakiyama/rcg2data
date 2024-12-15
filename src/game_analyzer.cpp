@@ -62,6 +62,7 @@ GameAnalyzer::analyze( const FieldModel & model )
 
     extractShootEvent( model );
     extractPassEvent( model );
+    extractDribbleEvent( model );
 
     std::sort( M_action_events.begin(), M_action_events.end(),
                []( const ActionEvent::ConstPtr & lhs,
@@ -457,6 +458,88 @@ GameAnalyzer::extractPassEventByKicks( const FieldModel & /*model*/ )
     }
 }
 #endif
+
+/*-------------------------------------------------------------------*/
+void
+GameAnalyzer::extractDribbleEvent( const FieldModel & model )
+{
+    Kick last_kick;
+    Vector2D kicker_pos = Vector2D::INVALIDATED;
+    int kicker_dash_count = 0;
+
+    for ( size_t i = 1; i < model.fieldStates().size(); ++i )
+    {
+        const FieldState::ConstPtr prev_state = model.getState( i - 1 );
+        const FieldState::ConstPtr state = model.getState( i );
+
+        if ( ! prev_state ) continue;
+        if ( ! state ) continue;
+
+        // playmode changed -> reset last kicker
+        if ( ( prev_state->gameMode().type() == GameMode::PlayOn
+             && state->gameMode().type() != GameMode::PlayOn )
+             ||  ( state->gameMode().type() != GameMode::PlayOn
+                   && state->gameMode().type() != GameMode::GoalKick_ )
+             )
+
+        {
+            last_kick.reset();
+            kicker_dash_count = 0;
+            continue;
+        }
+
+        // multiple kickers -> reset last kicker
+        if ( state->kickers().size() >= 2 )
+        {
+            last_kick.reset();
+            kicker_pos = Vector2D::INVALIDATED;
+            kicker_dash_count = 0;
+            continue;
+        }
+
+        // no kicking player
+        if ( state->kickers().empty() )
+        {
+            continue;
+        }
+
+        const CoachPlayerObject * kicker = state->kickers().front();
+
+        // same player kicks the ball
+        if ( last_kick.side_ == kicker->side()
+             && last_kick.unum_ == kicker->unum()
+             && kicker->dashCount() > kicker_dash_count )
+        {
+            // kicker performs dashes after the first kick.
+            ActionEvent::ConstPtr dribble( new Dribble( kicker->side(), kicker->unum(),
+                                                        last_kick.time_, last_kick.mode_, last_kick.pos_,
+                                                        prev_state->time(), prev_state->ball().pos() ) );
+            M_action_events.push_back( dribble );
+        }
+
+        // reset the last kick information
+        last_kick.reset();
+        kicker_dash_count = 0;
+
+        // new kicker
+        if ( ! last_kick.isValid() )
+        {
+            last_kick.assign( i - 1,
+                              kicker->side(),
+                              kicker->unum(),
+                              prev_state->time(),
+                              prev_state->gameMode(),
+                              prev_state->ball().pos(),
+                              ( state->ball().pos() - prev_state->ball().pos() ) );
+            const CoachPlayerObject * prev_kicker = prev_state->getPlayer( kicker->side(), kicker->unum() );
+            kicker_pos = ( prev_kicker
+                           ? prev_kicker->pos()
+                           : kicker->pos()  );
+            kicker_dash_count = kicker->dashCount();
+            continue;
+        }
+    }
+}
 
 /*-------------------------------------------------------------------*/
 /*!

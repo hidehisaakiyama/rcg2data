@@ -45,6 +45,16 @@ private:
         rcsc::Vector2D pos_;
         rcsc::Vector2D vel_;
 
+        Kick()
+            : index_( size_t( -1 ) ),
+              side_( rcsc::NEUTRAL ),
+              unum_( rcsc::Unum_Unknown ),
+              time_( -1, 0 ),
+              mode_(),
+              pos_( rcsc::Vector2D::INVALIDATED ),
+              vel_( rcsc::Vector2D::INVALIDATED )
+        { }
+
         Kick( size_t index,
               const rcsc::SideID side,
               const int unum,
@@ -60,6 +70,40 @@ private:
               pos_( pos ),
               vel_( vel )
         { }
+
+        void reset()
+        {
+            index_ = size_t( -1 );
+            side_ = rcsc::NEUTRAL;
+            unum_ = rcsc::Unum_Unknown;
+            time_.assign( -1, 0 );
+            mode_ = rcsc::GameMode();
+            pos_ = rcsc::Vector2D::INVALIDATED;
+            vel_ = rcsc::Vector2D::INVALIDATED;
+        }
+
+        bool isValid() const
+        {
+            return ( side_ != rcsc::NEUTRAL && unum_ != rcsc::Unum_Unknown );
+        }
+
+        void assign( const size_t index,
+                     const rcsc::SideID side,
+                     const int unum,
+                     const rcsc::GameTime & time,
+                     const rcsc::GameMode & mode,
+                     const rcsc::Vector2D & pos,
+                     const rcsc::Vector2D & vel )
+        {
+            index_ = index;
+            side_ = side;
+            unum_ = unum;
+            time_ = time;
+            mode_ = mode;
+            pos_ = pos;
+            vel_ = vel;
+        }
+
     };
 
     struct KickSequence {
@@ -94,6 +138,7 @@ private:
     void extractPassEvent( const FieldModel & model );
     void extractPassEventSimple( const FieldModel & model );
     void extractPassEventByKick( const FieldModel & model );
+    void extractDribbleEvent( const FieldModel & model );
 
     bool printKickEvents( const FieldModel & model ) const;
     bool printActionEvents() const;
