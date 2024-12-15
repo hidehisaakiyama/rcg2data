@@ -220,8 +220,10 @@ FieldState::setPlayer( const PlayerT & player,
         M_kickers.push_back( p );
     }
 
-    if ( player.isTackling() )
+    if ( player.isTackling()
+         && p->tackleCycle() == 1 )
     {
+        std::cerr << time() << " add tackler " << player.unum() << std::endl;
         M_tacklers.push_back( p );
     }
 

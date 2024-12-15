@@ -182,6 +182,43 @@ Pass::actionName() const
 /*!
 
  */
+Tackle::Tackle( const SideID start_ball_holder_side,
+                const int start_ball_holder_unum,
+                const GameTime & start_time,
+                const GameMode & start_mode,
+                const Vector2D & start_pos,
+                const SideID tackler_side,
+                const int tackler_unum,
+                const GameTime & end_time,
+                const Vector2D & end_pos )
+    : ActionEvent( ActionEvent::Tackle,
+                   start_ball_holder_side, start_ball_holder_unum,
+                   start_time, start_mode, start_pos,
+                   tackler_side, tackler_unum,
+                   end_time, end_pos,
+                   true )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+const char *
+Tackle::actionName() const
+{
+    return "Tackle";
+}
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
 Interception::Interception( const SideID kicker_side,
                             const int kicker_unum,
                             const GameTime & start_time,
@@ -191,7 +228,7 @@ Interception::Interception( const SideID kicker_side,
                             const int receiver_unum,
                             const GameTime & end_time,
                             const Vector2D & end_pos )
-    : ActionEvent( ActionEvent::Pass,
+    : ActionEvent( ActionEvent::Interception,
                    kicker_side, kicker_unum,
                    start_time, start_mode, start_pos,
                    receiver_side, receiver_unum,
@@ -209,6 +246,43 @@ const char *
 Interception::actionName() const
 {
     return "Interception";
+}
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+KeeperSave::KeeperSave( const SideID start_ball_holder_side,
+                            const int start_ball_holder_unum,
+                            const GameTime & start_time,
+                            const GameMode & start_mode,
+                            const Vector2D & start_pos,
+                            const SideID keeper_side,
+                            const int keeper_unum,
+                            const GameTime & end_time,
+                            const Vector2D & end_pos )
+    : ActionEvent( ActionEvent::KeeperSave,
+                   start_ball_holder_side, start_ball_holder_unum,
+                   start_time, start_mode, start_pos,
+                   keeper_side, keeper_unum,
+                   end_time, end_pos,
+                   true )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+const char *
+KeeperSave::actionName() const
+{
+    return "KeeperSave";
 }
 
 /*-------------------------------------------------------------------*/
