@@ -174,42 +174,21 @@ StateSingleKick::analyze( AnalysisContext & context,
         return;
     }
 
-    //
-    if ( detectGoal( context, *target_state, *prev_state ) )
+    // detect multiple kick/tackle
+    if ( detectMultiKick( context, *target_state, *prev_state ) )
     {
         return;
     }
 
-    // multiple kicker/tackler -> reset to neutral
-    if ( target_state->kickers().size() + target_state->tacklers().size() >= 2 )
+    //
+    if ( detectOutOfBounds( context, *target_state, *prev_state ) )
     {
-        // bool self_kicker = false;
-        // bool teammate_kicker = false;
-        // bool opponent_kicker = false;
-        // for ( const CoachPlayerObject * p : target_state->kickers() )
-        // {
-        //     if ( p->side() == M_kicker_side )
-        //     {
-        //         if ( p->unum() != M_kicker_unum )
-        //         {
-        //             teammate_kicker = true;
-        //         }
-        //         else
-        //         {
-        //             self_kicker = true;
-        //         }
-        //     }
-        //     else // if ( p->side() != M_kicker_side )
-        //     {
-        //         opponent_kicker = true;
-        //     }
-        // }
+        return;
+    }
 
-        std::shared_ptr< AnalysisState > new_state( new StateNeutral( target_index - 1,
-                                                                      prev_state->time(),
-                                                                      prev_state->gameMode(),
-                                                                      prev_state->ball().pos() ) );
-        context.setAnalysisState( new_state );
+    //
+    if ( detectGoal( context, *target_state, *prev_state ) )
+    {
         return;
     }
 }
@@ -257,7 +236,8 @@ StateSingleKick::detectSingleKick( AnalysisContext & context,
     {
         ActionEvent::ConstPtr event( new Dribble( kicker->side(), kicker->unum(),
                                                   beginTime(), beginMode(), M_first_ball_pos,
-                                                  prev.time(), prev.ball().pos() ) );
+                                                  prev.time(), prev.ball().pos(),
+                                                  true ) );
         context.addActionEvent( event );
     }
 
@@ -311,13 +291,17 @@ StateSingleKick::detectSingleTackle( AnalysisContext & context,
                                                false ) );
         context.addActionEvent( event );
     }
-    else // if ( tackler->side() != M_kicker_side )
+    else if ( tackler->side() != M_kicker_side )
     {
         ActionEvent::ConstPtr event( new Interception( M_kicker_side, M_kicker_unum,
                                                        beginTime(), beginMode(), M_first_ball_pos,
                                                        tackler->side(), tackler->unum(),
                                                        prev.time(), prev.ball().pos() ) );
         context.addActionEvent( event );
+    }
+    else
+    {
+        std::cerr << "(StateSingleKick::detectSingleTackle) unexpected reach." << std::endl;
     }
 
     //
@@ -330,6 +314,109 @@ StateSingleKick::detectSingleTackle( AnalysisContext & context,
                                                                   prev.ball().pos() ) );
     context.setAnalysisState( new_state );
     return true;
+}
+
+/*-------------------------------------------------------------------*/
+bool
+StateSingleKick::detectMultiKick( AnalysisContext & context,
+                                  const FieldState & current,
+                                  const FieldState & prev )
+{
+    if ( ( current.kickers().size() + current.tacklers().size() <= 1 )
+         || ! current.catchers().empty() )
+    {
+        return false;
+    }
+
+    // count the number of players
+    bool self = false;
+    int teammate_count = 0;
+    int opponent_count = 0;
+    const CoachPlayerObject * teammate = nullptr;
+    const CoachPlayerObject * opponent = nullptr;
+
+    for ( const CoachPlayerObject * p : current.kickers() )
+    {
+        if ( p->side() == M_kicker_side )
+        {
+            if ( p->unum() == M_kicker_unum )
+            {
+                self = true;
+            }
+            else
+            {
+                ++teammate_count;
+                teammate = p;
+            }
+        }
+        else
+        {
+            ++opponent_count;
+            opponent = p;
+        }
+    }
+
+    if ( opponent )
+    {
+        ActionEvent::ConstPtr event( new Interception( M_kicker_side, M_kicker_unum,
+                                                       beginTime(), beginMode(), M_first_ball_pos,
+                                                       opponent->side(), opponent->unum(),
+                                                       prev.time(), prev.ball().pos() ) );
+        context.addActionEvent( event );
+    }
+    else if ( self && teammate )
+    {
+        ActionEvent::ConstPtr event( new BallTouch( M_kicker_side, M_kicker_unum,
+                                                    beginTime(), beginMode(), M_first_ball_pos,
+                                                    teammate->side(), teammate->unum(),
+                                                    prev.time(), prev.ball().pos() ) );
+        context.addActionEvent( event );
+    }
+    else if ( ! self
+              && opponent_count == 0
+              && teammate_count >= 2 )
+    {
+        ActionEvent::ConstPtr event( new Pass( M_kicker_side, M_kicker_unum,
+                                               beginTime(), beginMode(), M_first_ball_pos,
+                                               teammate->side(), Unum_Unknown,
+                                               prev.time(), prev.ball().pos(),
+                                               true ) );
+        context.addActionEvent( event );
+    }
+
+    std::shared_ptr< AnalysisState > new_state( new StateNeutral( current.frameIndex() - 1,
+                                                                  prev.time(),
+                                                                  prev.gameMode(),
+                                                                  prev.ball().pos() ) );
+    context.setAnalysisState( new_state );
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+bool
+StateSingleKick::detectOutOfBounds( AnalysisContext & context,
+                                    const FieldState & current,
+                                    const FieldState & prev )
+{
+    if ( prev.gameMode().type() == GameMode::PlayOn
+         && ( current.gameMode().type() == GameMode::KickIn_
+              || current.gameMode().type() == GameMode::CornerKick_
+              || current.gameMode().type() == GameMode::GoalKick_ ) )
+    {
+        ActionEvent::ConstPtr event( new BallTouch( M_kicker_side, M_kicker_unum,
+                                                    beginTime(), beginMode(), M_first_ball_pos,
+                                                    current.time(), current.ball().pos() ) );
+        context.addActionEvent( event );
+
+        std::shared_ptr< AnalysisState > new_state( new StateNeutral( current.frameIndex() - 1,
+                                                                      prev.time(),
+                                                                      prev.gameMode(),
+                                                                      prev.ball().pos() ) );
+        context.setAnalysisState( new_state );
+        return true;
+    }
+
+    return false;
 }
 
 /*-------------------------------------------------------------------*/

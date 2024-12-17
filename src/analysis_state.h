@@ -142,6 +142,12 @@ private:
     bool detectSingleTackle( AnalysisContext & context,
                              const FieldState & current,
                              const FieldState & prev );
+    bool detectMultiKick( AnalysisContext & context,
+                          const FieldState & current,
+                          const FieldState & prev );
+    bool detectOutOfBounds( AnalysisContext & context,
+                            const FieldState & current,
+                            const FieldState & prev );
     bool detectGoal( AnalysisContext & context,
                      const FieldState & current,
                      const FieldState & prev );
