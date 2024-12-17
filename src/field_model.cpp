@@ -43,7 +43,7 @@ FieldModel::FieldModel()
 {
     M_field_states.reserve( 12000 );
 
-    FieldState::Ptr ptr( new FieldState( GameTime( 0, 0 ) ) );
+    FieldState::Ptr ptr( new FieldState( 0, GameTime( 0, 0 ) ) );
     appendState( ptr );
 }
 
@@ -142,7 +142,7 @@ FieldModel::appendState( const ShowInfoT & show )
         prev_state = M_field_states.back();
     }
 
-    FieldState::Ptr ptr( new FieldState( M_time, M_game_mode, show, prev_state ) );
+    FieldState::Ptr ptr( new FieldState( M_field_states.size(), M_time, M_game_mode, show, prev_state ) );
     M_field_states.push_back( ptr );
 }
 
@@ -177,19 +177,18 @@ FieldModel::appendState( FieldState::Ptr ptr )
 
  */
 ssize_t
-FieldModel::findState( const rcsc::GameTime & target_time ) const
+FieldModel::findState( const GameTime & target_time ) const
 {
-    FieldState::Ptr target( new FieldState( target_time ) );
-
     std::vector< FieldState::Ptr >::const_iterator it
         = std::lower_bound( M_field_states.begin(),
                             M_field_states.end(),
-                            target,
+                            target_time,
                             []( const FieldState::Ptr & lhs,
-                                const FieldState::Ptr & rhs )
+                                const GameTime & rhs )
                             {
-                                return lhs->time() < rhs->time();
+                                return lhs->time() < rhs;
                             } );
+
     if ( it != M_field_states.end()
          && ( *it )->time() == target_time )
     {
@@ -206,16 +205,14 @@ FieldModel::findState( const rcsc::GameTime & target_time ) const
 ssize_t
 FieldModel::findKickersStateBefore( const GameTime & target_time ) const
 {
-    FieldState::Ptr target( new FieldState( target_time ) );
-
     std::vector< FieldState::Ptr >::const_iterator position
         = std::lower_bound( M_field_states.begin(),
                             M_field_states.end(),
-                            target,
+                            target_time,
                             []( const FieldState::Ptr & lhs,
-                                const FieldState::Ptr & rhs )
+                                const GameTime & rhs )
                             {
-                                return lhs->time() < rhs->time();
+                                return lhs->time() < rhs;
                             } );
     if ( position == M_field_states.end() )
     {

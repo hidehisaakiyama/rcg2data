@@ -55,21 +55,26 @@ GameAnalyzer::GameAnalyzer()
 bool
 GameAnalyzer::analyze( const FieldModel & model )
 {
-    for ( size_t i = 0; i < model.fieldStates().size(); ++i )
+    for ( size_t i = 1; i < model.fieldStates().size(); ++i )
     {
-        extractKickEvent( model, i );
+        M_context.analyze( model, i );
     }
 
-    extractShootEvent( model );
-    extractPassEvent( model );
-    extractDribbleEvent( model );
+    // for ( size_t i = 0; i < model.fieldStates().size(); ++i )
+    // {
+    //     extractKickEvent( model, i );
+    // }
 
-    std::sort( M_action_events.begin(), M_action_events.end(),
-               []( const ActionEvent::ConstPtr & lhs,
-                   const ActionEvent::ConstPtr & rhs )
-               {
-                   return lhs->startTime() < rhs->startTime();
-               } );
+    // extractShootEvent( model );
+    // extractPassEvent( model );
+    // extractDribbleEvent( model );
+
+    // std::sort( M_action_events.begin(), M_action_events.end(),
+    //            []( const ActionEvent::ConstPtr & lhs,
+    //                const ActionEvent::ConstPtr & rhs )
+    //            {
+    //                return lhs->startTime() < rhs->startTime();
+    //            } );
 
     return true;
 }
@@ -596,7 +601,8 @@ GameAnalyzer::extractDribbleEvent( const FieldModel & model )
 bool
 GameAnalyzer::print( const FieldModel & /*model*/ ) const
 {
-    printActionEvents();
+    M_context.printActionEvents( std::cout ) << std::flush;
+    //printActionEvents();
     return true;
 }
 

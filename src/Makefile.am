@@ -5,6 +5,8 @@ bin_PROGRAMS = rcg2data
 rcg2data_SOURCES = \
 	options.cpp \
 	action_event.cpp \
+	analysis_context.cpp \
+	analysis_state.cpp \
 	field_model.cpp \
 	field_state.cpp \
 	game_analyzer.cpp \
@@ -14,6 +16,8 @@ rcg2data_SOURCES = \
 noinst_HEADERS = \
 	abstract_printer.h \
 	action_event.h \
+	analysis_context.h \
+	analysis_state.h \
 	field_model.h \
 	field_state.h \
 	game_analyzer.h \

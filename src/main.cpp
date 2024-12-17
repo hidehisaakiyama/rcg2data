@@ -71,7 +71,7 @@ main( int argc, char **argv )
     FieldModel field_model;
     RCGReader reader( field_model );
 
-    std::cerr << "parsing ... [" << filepath << "]" << std::endl;
+    // std::cerr << "parsing ... [" << filepath << "]" << std::endl;
     if ( ! parser->parse( fin, reader ) )
     {
         return 1;

@@ -253,6 +253,28 @@ public:
 /*-------------------------------------------------------------------*/
 /*-------------------------------------------------------------------*/
 
+class BallTouch
+    : public ActionEvent {
+private:
+
+public:
+
+    BallTouch( const rcsc::SideID player_side,
+               const int player_unum,
+               const rcsc::GameTime & start_time,
+               const rcsc::GameMode & start_mode,
+               const rcsc::Vector2D & start_pos,
+               const rcsc::GameTime & end_time,
+               const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const;
+
+};
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
 class Dribble
     : public ActionEvent {
 private:

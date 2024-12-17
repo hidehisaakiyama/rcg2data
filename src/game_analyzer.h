@@ -28,7 +28,10 @@
 #define GAME_ANALYZER_H
 
 #include "action_event.h"
+#include "analysis_context.h"
 #include "field_model.h"
+
+#include <memory>
 
 class GameAnalyzer {
 private:
@@ -113,6 +116,8 @@ private:
         std::vector< Kick::ConstPtr > kicks_;
     };
 
+    AnalysisContext M_context;
+
     std::vector< Kick::ConstPtr > M_single_kicks;
 
     std::vector< KickSequence::Ptr > M_kick_sequences;
@@ -123,6 +128,7 @@ private:
     // std::vector< ActionEvent::ConstPtr > M_pass_events;
     // std::vector< ActionEvent::ConstPtr > M_interception_events;
 
+
 public:
     GameAnalyzer();
 
@@ -131,6 +137,7 @@ public:
     bool print( const FieldModel & model ) const;
 
 private:
+
     void extractKickEvent( const FieldModel & model,
                            const size_t idx );
 

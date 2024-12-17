@@ -290,6 +290,36 @@ KeeperSave::actionName() const
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
+BallTouch::BallTouch( const rcsc::SideID player_side,
+                      const int player_unum,
+                      const rcsc::GameTime & start_time,
+                      const rcsc::GameMode & start_mode,
+                      const rcsc::Vector2D & start_pos,
+                      const rcsc::GameTime & end_time,
+                      const rcsc::Vector2D & end_pos )
+    : ActionEvent( ActionEvent::BallTouch,
+                   player_side, player_unum,
+                   start_time, start_mode, start_pos,
+                   player_side, player_unum,
+                   end_time, end_pos,
+                   true )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+const char *
+BallTouch::actionName() const
+{
+    return "BallTouch";
+}
+
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
 Dribble::Dribble( const SideID kicker_side,
                   const int kicker_unum,
                   const GameTime & start_time,
