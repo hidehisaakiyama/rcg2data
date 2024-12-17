@@ -36,119 +36,15 @@
 class GameAnalyzer {
 private:
 
-    struct Kick {
-        using Ptr = std::shared_ptr< Kick >;
-        using ConstPtr = std::shared_ptr< const Kick >;
-
-        size_t index_; // index of the states
-        rcsc::SideID side_;
-        int unum_;
-        rcsc::GameTime time_;
-        rcsc::GameMode mode_;
-        rcsc::Vector2D pos_;
-        rcsc::Vector2D vel_;
-
-        Kick()
-            : index_( size_t( -1 ) ),
-              side_( rcsc::NEUTRAL ),
-              unum_( rcsc::Unum_Unknown ),
-              time_( -1, 0 ),
-              mode_(),
-              pos_( rcsc::Vector2D::INVALIDATED ),
-              vel_( rcsc::Vector2D::INVALIDATED )
-        { }
-
-        Kick( size_t index,
-              const rcsc::SideID side,
-              const int unum,
-              const rcsc::GameTime & time,
-              const rcsc::GameMode & mode,
-              const rcsc::Vector2D & pos,
-              const rcsc::Vector2D & vel )
-            : index_( index ),
-              side_( side ),
-              unum_( unum ),
-              time_( time ),
-              mode_( mode ),
-              pos_( pos ),
-              vel_( vel )
-        { }
-
-        void reset()
-        {
-            index_ = size_t( -1 );
-            side_ = rcsc::NEUTRAL;
-            unum_ = rcsc::Unum_Unknown;
-            time_.assign( -1, 0 );
-            mode_ = rcsc::GameMode();
-            pos_ = rcsc::Vector2D::INVALIDATED;
-            vel_ = rcsc::Vector2D::INVALIDATED;
-        }
-
-        bool isValid() const
-        {
-            return ( side_ != rcsc::NEUTRAL && unum_ != rcsc::Unum_Unknown );
-        }
-
-        void assign( const size_t index,
-                     const rcsc::SideID side,
-                     const int unum,
-                     const rcsc::GameTime & time,
-                     const rcsc::GameMode & mode,
-                     const rcsc::Vector2D & pos,
-                     const rcsc::Vector2D & vel )
-        {
-            index_ = index;
-            side_ = side;
-            unum_ = unum;
-            time_ = time;
-            mode_ = mode;
-            pos_ = pos;
-            vel_ = vel;
-        }
-
-    };
-
-    struct KickSequence {
-        using Ptr = std::shared_ptr< KickSequence >;
-
-        rcsc::SideID side_;
-        std::vector< Kick::ConstPtr > kicks_;
-    };
-
     AnalysisContext M_context;
-
-    std::vector< Kick::ConstPtr > M_single_kicks;
-
-    std::vector< KickSequence::Ptr > M_kick_sequences;
-
-    std::vector< ActionEvent::ConstPtr > M_action_events;
-
-    // std::vector< ActionEvent::ConstPtr > M_shoot_events;
-    // std::vector< ActionEvent::ConstPtr > M_pass_events;
-    // std::vector< ActionEvent::ConstPtr > M_interception_events;
-
 
 public:
     GameAnalyzer();
 
     bool analyze( const FieldModel & model );
 
-    bool print( const FieldModel & model ) const;
+    std::ostream & print( std::ostream & os ) const;
 
-private:
-
-    void extractKickEvent( const FieldModel & model,
-                           const size_t idx );
-
-    void extractShootEvent( const FieldModel & model );
-    void extractPassEvent( const FieldModel & model );
-    void extractPassEventSimple( const FieldModel & model );
-    void extractPassEventByKick( const FieldModel & model );
-    void extractDribbleEvent( const FieldModel & model );
-
-    bool printKickEvents( const FieldModel & model ) const;
-    bool printActionEvents() const;
 };
 
 #endif

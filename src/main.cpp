@@ -85,7 +85,7 @@ main( int argc, char **argv )
         return 1;
     }
 
-    analyzer.print( field_model );
+    analyzer.print( std::cout );
 
     return 0;
 }
