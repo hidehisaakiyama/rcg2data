@@ -310,10 +310,10 @@ StateSingleKick::detectSingleTackle( AnalysisContext & context,
     }
     else if ( tackler->side() != M_kicker_side )
     {
-        ActionEvent::ConstPtr event( new Interception( M_kicker_side, M_kicker_unum,
-                                                       beginTime(), beginMode(), M_first_ball_pos,
-                                                       tackler->side(), tackler->unum(),
-                                                       prev.time(), prev.ball().pos() ) );
+        ActionEvent::ConstPtr event( new Tackle( M_kicker_side, M_kicker_unum,
+                                                 beginTime(), beginMode(), M_first_ball_pos,
+                                                 tackler->side(), tackler->unum(),
+                                                 prev.time(), prev.ball().pos() ) );
         context.addActionEvent( event );
     }
     else
@@ -346,11 +346,14 @@ StateSingleKick::detectMultiKick( AnalysisContext & context,
     }
 
     // count the number of players
-    bool self = false;
+    bool self_kick = false;
+    bool self_tackle = false;
     int teammate_count = 0;
     int opponent_count = 0;
-    const CoachPlayerObject * teammate = nullptr;
-    const CoachPlayerObject * opponent = nullptr;
+    const CoachPlayerObject * teammate_kicker = nullptr;
+    const CoachPlayerObject * opponent_kicker = nullptr;
+    const CoachPlayerObject * teammate_tackler = nullptr;
+    const CoachPlayerObject * opponent_tackler = nullptr;
 
     for ( const CoachPlayerObject * p : current.kickers() )
     {
@@ -358,44 +361,77 @@ StateSingleKick::detectMultiKick( AnalysisContext & context,
         {
             if ( p->unum() == M_kicker_unum )
             {
-                self = true;
+                self_kick = true;
             }
             else
             {
                 ++teammate_count;
-                teammate = p;
+                teammate_kicker = p;
             }
         }
         else
         {
             ++opponent_count;
-            opponent = p;
+            opponent_kicker = p;
         }
     }
 
-    if ( opponent )
+    for ( const CoachPlayerObject * p : current.tacklers() )
+    {
+        if ( p->side() == M_kicker_side )
+        {
+            if ( p->unum() == M_kicker_unum )
+            {
+                self_tackle = true;
+            }
+            else
+            {
+                ++teammate_count;
+                teammate_tackler = p;
+            }
+        }
+        else
+        {
+            ++opponent_count;
+            opponent_tackler = p;
+        }
+    }
+
+    if ( opponent_tackler )
+    {
+        // std::cerr << "(StateSingleKick::detectMultiKick) opponent tackle " << beginTime()
+        //           << " kicker=(" << side_char( M_kicker_side ) << ' ' << M_kicker_unum << ')'
+        //           << " tacker=(" << side_char( opponent_tackler->side() ) << ' ' << opponent_tackler->unum() << ')'
+        //           << std::endl;
+        ActionEvent::ConstPtr event( new Tackle( M_kicker_side, M_kicker_unum,
+                                                 beginTime(), beginMode(), M_first_ball_pos,
+                                                 opponent_tackler->side(), opponent_tackler->unum(),
+                                                 prev.time(), prev.ball().pos() ) );
+        context.addActionEvent( event );
+    }
+    else if ( opponent_kicker )
     {
         ActionEvent::ConstPtr event( new Interception( M_kicker_side, M_kicker_unum,
                                                        beginTime(), beginMode(), M_first_ball_pos,
-                                                       opponent->side(), opponent->unum(),
+                                                       opponent_kicker->side(), opponent_kicker->unum(),
                                                        prev.time(), prev.ball().pos() ) );
         context.addActionEvent( event );
     }
-    else if ( self && teammate )
+    else if ( self_kick && teammate_kicker )
     {
         ActionEvent::ConstPtr event( new BallTouch( M_kicker_side, M_kicker_unum,
                                                     beginTime(), beginMode(), M_first_ball_pos,
-                                                    teammate->side(), teammate->unum(),
+                                                    teammate_kicker->side(), teammate_kicker->unum(),
                                                     prev.time(), prev.ball().pos() ) );
         context.addActionEvent( event );
     }
-    else if ( ! self
+    else if ( ! self_kick
               && opponent_count == 0
               && teammate_count >= 2 )
     {
         ActionEvent::ConstPtr event( new Pass( M_kicker_side, M_kicker_unum,
                                                beginTime(), beginMode(), M_first_ball_pos,
-                                               teammate->side(), Unum_Unknown,
+                                               teammate_kicker->side(), Unum_Unknown,
                                                prev.time(), prev.ball().pos(),
                                                true ) );
         context.addActionEvent( event );
