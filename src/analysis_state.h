@@ -37,13 +37,13 @@ class FieldState;
 
 class AnalysisState {
 private:
-    size_t M_frame_index;
-    rcsc::GameTime M_begin_time;
-    rcsc::GameMode M_begin_mode;
 
     AnalysisState() = delete;
 
 protected:
+    size_t M_frame_index;
+    rcsc::GameTime M_begin_time;
+    rcsc::GameMode M_begin_mode;
 
     AnalysisState( const size_t index,
                    const rcsc::GameTime & begin_time,
@@ -98,6 +98,16 @@ public:
     void analyze( AnalysisContext & context,
                   const FieldModel & model,
                   const size_t target_index ) override;
+
+    bool detectSingleKick( AnalysisContext & context,
+                           const FieldState & current,
+                           const FieldState & prev );
+    bool detectKeeperSave( AnalysisContext & context,
+                           const FieldState & current,
+                           const FieldState & prev );
+    bool detectGoal( AnalysisContext & context,
+                     const FieldState & current,
+                     const FieldState & prev );
 
     std::string name() override;
 

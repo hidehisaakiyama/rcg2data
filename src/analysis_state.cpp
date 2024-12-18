@@ -91,44 +91,104 @@ StateNeutral::analyze( AnalysisContext & context,
     }
 
     // single kicker
-    if ( target_state->kickers().size() == 1
-         && target_state->tacklers().empty()
-         && target_state->catchers().empty() )
+    if ( detectSingleKick( context, *target_state, *prev_state ) )
     {
-        const CoachPlayerObject * kicker = target_state->kickers().front();
-        std::shared_ptr< AnalysisState > new_state( new StateSingleKick( prev_state->frameIndex(),
-                                                                         prev_state->time(),
-                                                                         prev_state->gameMode(),
-                                                                         kicker->side(),
-                                                                         kicker->unum(),
-                                                                         kicker->dashCount(),
-                                                                         prev_state->ball().pos() ) );
-        context.setAnalysisState( new_state );
+
+    }
+    // else if ( detectSingleTackle( context, *target_state, *prev_state ) )
+    // else if ( detectMultipleKick( context, *target_state, *prev_state ) )
+
+    if ( detectGoal( context, *target_state, *prev_state ) )
+    {
         return;
     }
 
-    if ( prev_state->gameMode().type() == GameMode::PlayOn
-         && target_state->gameMode().type() == GameMode::FreeKick_
-         && ! target_state->catchers().empty() )
+    // goalie catched the ball
+    if ( detectKeeperSave( context, *target_state, *prev_state ) )
     {
-        const CoachPlayerObject * catcher = target_state->catchers().front();
+        return;
+    }
+};
+
+/*-------------------------------------------------------------------*/
+bool
+StateNeutral::detectSingleKick( AnalysisContext & context,
+                                const FieldState & current,
+                                const FieldState & prev )
+{
+    if ( current.kickers().size() == 1
+         && current.tacklers().empty()
+         && current.catchers().empty() )
+    {
+        const CoachPlayerObject * kicker = current.kickers().front();
+        std::shared_ptr< AnalysisState > new_state( new StateSingleKick( prev.frameIndex(),
+                                                                         prev.time(),
+                                                                         prev.gameMode(),
+                                                                         kicker->side(),
+                                                                         kicker->unum(),
+                                                                         kicker->dashCount(),
+                                                                         prev.ball().pos() ) );
+        context.setAnalysisState( new_state );
+        return true;
+    }
+
+    return false;
+}
+
+/*-------------------------------------------------------------------*/
+bool
+StateNeutral::detectKeeperSave( AnalysisContext & context,
+                                const FieldState & current,
+                                const FieldState & prev )
+{
+    if ( prev.gameMode().type() == GameMode::PlayOn
+         && current.gameMode().type() == GameMode::FreeKick_
+         && ! current.catchers().empty() )
+    {
+        const CoachPlayerObject * catcher = current.catchers().front();
         ActionEvent::ConstPtr event( new KeeperSave( NEUTRAL, Unum_Unknown,
                                                      beginTime(), beginMode(), M_first_ball_pos,
                                                      catcher->side(), catcher->unum(),
-                                                     prev_state->time(), prev_state->ball().pos() ) );
+                                                     prev.time(), prev.ball().pos() ) );
+        context.addActionEvent( event );
+        return true;
+    }
+
+    return false;
+}
+
+/*-------------------------------------------------------------------*/
+bool
+StateNeutral::detectGoal( AnalysisContext & context,
+                          const FieldState & current,
+                          const FieldState & prev )
+{
+    if ( current.gameMode().type() != GameMode::AfterGoal_
+         || prev.gameMode().type() == GameMode::AfterGoal_ )
+    {
+        return false;
+    }
+
+    if ( prev.kickers().size() == 1 )
+    {
+        const CoachPlayerObject * kicker = prev.kickers().front();
+        ActionEvent::ConstPtr event( new Shoot( kicker->side(), kicker->unum(),
+                                                prev.time(), prev.gameMode(), prev.ball().pos(),
+                                                current.time(), current.ball().pos(),
+                                                true ) );
+        context.addActionEvent( event );
+    }
+    else
+    {
+        ActionEvent::ConstPtr event( new Shoot( NEUTRAL, Unum_Unknown,
+                                                prev.time(), prev.gameMode(), prev.ball().pos(),
+                                                current.time(), current.ball().pos(),
+                                                true ) );
         context.addActionEvent( event );
     }
 
-    // SideID kicker_side = NEUTRAL;
-    // if ( ! target_state->kickers().empty() )
-    // {
-    //     for ( const CoachPlayerObject * p : target_state->kickers() )
-    //     {
-    //         kicker_side = p->side();
-    //     }
-    // }
-
-};
+    return true;
+}
 
 /*-------------------------------------------------------------------*/
 std::string
@@ -174,22 +234,17 @@ StateSingleKick::analyze( AnalysisContext & context,
         return;
     }
 
-    // single kick event
     if ( detectSingleKick( context, *target_state, *prev_state ) )
     {
-        return;
+        // single kick event
     }
-
-    // detect single tackle event
-    if ( detectSingleTackle( context, *target_state, *prev_state ) )
+    else if ( detectSingleTackle( context, *target_state, *prev_state ) )
     {
-        return;
+        // detect single tackle event
     }
-
-    // detect multiple kick/tackle
-    if ( detectMultiKick( context, *target_state, *prev_state ) )
+    else if ( detectMultiKick( context, *target_state, *prev_state ) )
     {
-        return;
+        // detect multiple kick/tackle
     }
 
     //
@@ -310,6 +365,8 @@ StateSingleKick::detectSingleTackle( AnalysisContext & context,
     }
     else if ( tackler->side() != M_kicker_side )
     {
+        std::cerr << "detectSingleTackle " << current.time() << " opponent" << std::endl;
+
         if ( current.gameMode().type() == GameMode::FoulCharge_ )
         {
             ActionEvent::ConstPtr event( new Foul( M_kicker_side, M_kicker_unum,
