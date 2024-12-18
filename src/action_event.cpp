@@ -257,14 +257,14 @@ Interception::actionName() const
 
  */
 KeeperSave::KeeperSave( const SideID begin_ball_holder_side,
-                            const int begin_ball_holder_unum,
-                            const GameTime & begin_time,
-                            const GameMode & begin_mode,
-                            const Vector2D & begin_pos,
-                            const SideID keeper_side,
-                            const int keeper_unum,
-                            const GameTime & end_time,
-                            const Vector2D & end_pos )
+                        const int begin_ball_holder_unum,
+                        const GameTime & begin_time,
+                        const GameMode & begin_mode,
+                        const Vector2D & begin_pos,
+                        const SideID keeper_side,
+                        const int keeper_unum,
+                        const GameTime & end_time,
+                        const Vector2D & end_pos )
     : ActionEvent( ActionEvent::KeeperSave,
                    begin_ball_holder_side, begin_ball_holder_unum,
                    begin_time, begin_mode, begin_pos,
@@ -363,4 +363,33 @@ const char *
 Dribble::actionName() const
 {
     return "Dribble";
+}
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+OutOfBounds::OutOfBounds( const rcsc::SideID kicker_side,
+                          const int kicker_unum,
+                          const rcsc::GameTime & begin_time,
+                          const rcsc::GameMode & begin_mode,
+                          const rcsc::Vector2D & begin_pos,
+                          const rcsc::GameTime & end_time,
+                          const rcsc::Vector2D & end_pos )
+    : ActionEvent( ActionEvent::Dribble,
+                   kicker_side, kicker_unum,
+                   begin_time, begin_mode, begin_pos,
+                   NEUTRAL, Unum_Unknown,
+                   end_time, end_pos,
+                   false )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+const char *
+OutOfBounds::actionName() const
+{
+    return "OutOfBounds";
 }

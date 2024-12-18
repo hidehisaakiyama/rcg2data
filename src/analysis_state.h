@@ -148,6 +148,9 @@ private:
     bool detectOutOfBounds( AnalysisContext & context,
                             const FieldState & current,
                             const FieldState & prev );
+    bool detectKeeperSave( AnalysisContext & context,
+                           const FieldState & current,
+                           const FieldState & prev );
     bool detectGoal( AnalysisContext & context,
                      const FieldState & current,
                      const FieldState & prev );

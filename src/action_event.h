@@ -65,6 +65,10 @@ public:
         BallTouch, // Player makes a bad touch and loses the ball
         Dribble, // Player dribbles at least 3 meters with the ball
         GoalKick,
+
+        // original type
+        OutOfBounds, // Players kick/tackle the ball out of bounds
+        LooseBall, // Multiple players touched the ball simultaneously, and it resulted in a loose ball.
         None,
     };
 
@@ -303,6 +307,26 @@ public:
 
     const char * actionName() const override;
 
+};
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+class OutOfBounds
+    : public ActionEvent {
+private:
+
+public:
+
+    OutOfBounds( const rcsc::SideID kicker_side,
+                 const int kicker_unum,
+                 const rcsc::GameTime & begin_time,
+                 const rcsc::GameMode & begin_mode,
+                 const rcsc::Vector2D & begin_pos,
+                 const rcsc::GameTime & end_time,
+                 const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const override;
 };
 
 #endif

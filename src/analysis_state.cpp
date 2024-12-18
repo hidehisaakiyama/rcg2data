@@ -107,6 +107,18 @@ StateNeutral::analyze( AnalysisContext & context,
         return;
     }
 
+    if ( prev_state->gameMode().type() == GameMode::PlayOn
+         && target_state->gameMode().type() == GameMode::FreeKick_
+         && ! target_state->catchers().empty() )
+    {
+        const CoachPlayerObject * catcher = target_state->catchers().front();
+        ActionEvent::ConstPtr event( new KeeperSave( NEUTRAL, Unum_Unknown,
+                                                     beginTime(), beginMode(), M_first_ball_pos,
+                                                     catcher->side(), catcher->unum(),
+                                                     prev_state->time(), prev_state->ball().pos() ) );
+        context.addActionEvent( event );
+    }
+
     // SideID kicker_side = NEUTRAL;
     // if ( ! target_state->kickers().empty() )
     // {
@@ -186,6 +198,11 @@ StateSingleKick::analyze( AnalysisContext & context,
         return;
     }
 
+    if ( detectKeeperSave( context, *target_state, *prev_state ) )
+    {
+        return;
+    }
+
     //
     if ( detectGoal( context, *target_state, *prev_state ) )
     {
@@ -245,7 +262,7 @@ StateSingleKick::detectSingleKick( AnalysisContext & context,
     // transition to the new single kick state
     //
 
-    std::shared_ptr< AnalysisState > new_state( new StateSingleKick( current.frameIndex() - 1,
+    std::shared_ptr< AnalysisState > new_state( new StateSingleKick( prev.frameIndex(),
                                                                      prev.time(),
                                                                      prev.gameMode(),
                                                                      kicker->side(),
@@ -308,7 +325,7 @@ StateSingleKick::detectSingleTackle( AnalysisContext & context,
     // transition to the new neutral state
     //
 
-    std::shared_ptr< AnalysisState > new_state( new StateNeutral( current.frameIndex() - 1,
+    std::shared_ptr< AnalysisState > new_state( new StateNeutral( prev.frameIndex(),
                                                                   prev.time(),
                                                                   prev.gameMode(),
                                                                   prev.ball().pos() ) );
@@ -384,7 +401,7 @@ StateSingleKick::detectMultiKick( AnalysisContext & context,
         context.addActionEvent( event );
     }
 
-    std::shared_ptr< AnalysisState > new_state( new StateNeutral( current.frameIndex() - 1,
+    std::shared_ptr< AnalysisState > new_state( new StateNeutral( prev.frameIndex(),
                                                                   prev.time(),
                                                                   prev.gameMode(),
                                                                   prev.ball().pos() ) );
@@ -398,17 +415,21 @@ StateSingleKick::detectOutOfBounds( AnalysisContext & context,
                                     const FieldState & current,
                                     const FieldState & prev )
 {
+    // std::cerr << "detectOutOfBounds prev=" << prev.time() << ' ' << prev.gameMode().toCString()
+    //           << " cur=" << current.time() << ' ' << current.gameMode().toCString()
+    //           << std::endl;
+
     if ( prev.gameMode().type() == GameMode::PlayOn
          && ( current.gameMode().type() == GameMode::KickIn_
               || current.gameMode().type() == GameMode::CornerKick_
               || current.gameMode().type() == GameMode::GoalKick_ ) )
     {
-        ActionEvent::ConstPtr event( new BallTouch( M_kicker_side, M_kicker_unum,
-                                                    beginTime(), beginMode(), M_first_ball_pos,
-                                                    current.time(), current.ball().pos() ) );
+        ActionEvent::ConstPtr event( new OutOfBounds( M_kicker_side, M_kicker_unum,
+                                                      beginTime(), beginMode(), M_first_ball_pos,
+                                                      prev.time(), prev.ball().pos() ) );
         context.addActionEvent( event );
 
-        std::shared_ptr< AnalysisState > new_state( new StateNeutral( current.frameIndex() - 1,
+        std::shared_ptr< AnalysisState > new_state( new StateNeutral( prev.frameIndex(),
                                                                       prev.time(),
                                                                       prev.gameMode(),
                                                                       prev.ball().pos() ) );
@@ -417,6 +438,43 @@ StateSingleKick::detectOutOfBounds( AnalysisContext & context,
     }
 
     return false;
+}
+
+/*-------------------------------------------------------------------*/
+bool
+StateSingleKick::detectKeeperSave( AnalysisContext & context,
+                                   const FieldState & current,
+                                   const FieldState & prev )
+{
+    if ( current.catchers().empty() )
+    {
+        return false;
+    }
+
+    if ( prev.gameMode().type() == GameMode::PlayOn
+         && current.gameMode().type() == GameMode::FreeKick_ )
+    {
+        const CoachPlayerObject * catcher = current.catchers().front();
+        ActionEvent::ConstPtr event( new KeeperSave( M_kicker_side, M_kicker_unum,
+                                                     beginTime(), beginMode(), M_first_ball_pos,
+                                                     catcher->side(), catcher->unum(),
+                                                     prev.time(), prev.ball().pos() ) );
+        context.addActionEvent( event );
+
+        // std::shared_ptr< AnalysisState > new_state( new StateGoalieCatch( current.frameIndex(),
+        //                                                                   current.time(),
+        //                                                                   current.gameMode(),
+        //                                                                   current.ball().pos() ) );
+        // context.setAnslysisState( new_state );
+    }
+
+    std::shared_ptr< AnalysisState > new_state( new StateNeutral( prev.frameIndex(),
+                                                                  prev.time(),
+                                                                  prev.gameMode(),
+                                                                  prev.ball().pos() ) );
+    context.setAnalysisState( new_state );
+
+    return true;
 }
 
 /*-------------------------------------------------------------------*/
@@ -452,7 +510,7 @@ StateSingleKick::detectGoal( AnalysisContext & context,
     // transition to the new neutral state
     //
 
-    std::shared_ptr< AnalysisState > new_state( new StateNeutral( current.frameIndex() - 1,
+    std::shared_ptr< AnalysisState > new_state( new StateNeutral( current.frameIndex(),
                                                                   current.time(),
                                                                   current.gameMode(),
                                                                   current.ball().pos() ) );
