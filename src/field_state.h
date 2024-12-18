@@ -41,6 +41,7 @@ public:
     typedef std::shared_ptr< const FieldState > ConstPtr;
 
 private:
+    size_t M_frame_index;
     rcsc::GameTime M_time;
     rcsc::GameMode M_game_mode;
     int M_score_left;
@@ -80,9 +81,11 @@ private:
 
 public:
 
-    explicit FieldState( const rcsc::GameTime & time );
+    FieldState( const size_t frame_index,
+                const rcsc::GameTime & time );
 
-    FieldState( const rcsc::GameTime & time,
+    FieldState( const size_t frame_index,
+                const rcsc::GameTime & time,
                 const rcsc::GameMode & mode,
                 const rcsc::rcg::ShowInfoT & show,
                 const ConstPtr & prev_state );

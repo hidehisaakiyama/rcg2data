@@ -114,14 +114,13 @@ Shoot::Shoot( const SideID kicker_side,
               const GameMode & begin_mode,
               const Vector2D & begin_pos,
               const GameTime & end_time,
-              const Vector2D & end_pos,
-              const bool success )
+              const Vector2D & end_pos )
     : ActionEvent( ActionEvent::Shot,
                    kicker_side, kicker_unum,
                    begin_time, begin_mode, begin_pos,
                    NEUTRAL, Unum_Unknown,
                    end_time, end_pos,
-                   success )
+                   true )
 {
 
 }
@@ -134,6 +133,42 @@ const char *
 Shoot::actionName() const
 {
     return "Shoot";
+}
+
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+OwnGoal::OwnGoal( const SideID kicker_side,
+                  const int kicker_unum,
+                  const GameTime & begin_time,
+                  const GameMode & begin_mode,
+                  const Vector2D & begin_pos,
+                  const GameTime & end_time,
+                  const Vector2D & end_pos )
+    : ActionEvent( ActionEvent::OwnGoal,
+                   kicker_side, kicker_unum,
+                   begin_time, begin_mode, begin_pos,
+                   NEUTRAL, Unum_Unknown,
+                   end_time, end_pos,
+                   true )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+const char *
+OwnGoal::actionName() const
+{
+    return "OwnGoal";
 }
 
 /*-------------------------------------------------------------------*/

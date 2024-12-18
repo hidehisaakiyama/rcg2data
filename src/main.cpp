@@ -68,10 +68,11 @@ main( int argc, char **argv )
         return 1;
     }
 
+    std::cerr << "analyzing ... [" << filepath << "]" << std::endl;
+
     FieldModel field_model;
     RCGReader reader( field_model );
 
-    std::cerr << "parsing ... [" << filepath << "]" << std::endl;
     if ( ! parser->parse( fin, reader ) )
     {
         return 1;
@@ -79,13 +80,12 @@ main( int argc, char **argv )
 
     GameAnalyzer analyzer;
 
-    std::cerr << "analyzing ... [" << filepath << "]" << std::endl;
     if ( ! analyzer.analyze( field_model ) )
     {
         return 1;
     }
 
-    analyzer.print( field_model );
+    analyzer.print( std::cout );
 
     return 0;
 }

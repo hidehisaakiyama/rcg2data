@@ -38,9 +38,11 @@ using namespace rcsc::rcg;
 /*!
 
  */
-FieldState::FieldState( const GameTime & time )
+FieldState::FieldState( const size_t frame_index,
+                        const GameTime & time )
 
-    : M_time( time ),
+    : M_frame_index( frame_index ),
+      M_time( time ),
       M_game_mode(),
       M_score_left( 0 ),
       M_score_right( 0 )
@@ -56,12 +58,14 @@ FieldState::FieldState( const GameTime & time )
 /*!
 
  */
-FieldState::FieldState( const GameTime & time,
+FieldState::FieldState( const size_t frame_index,
+                        const GameTime & time,
                         const GameMode & mode,
                         const ShowInfoT & show,
                         const ConstPtr & prev_state )
 
-    : M_time( time ),
+    : M_frame_index( frame_index ),
+      M_time( time ),
       M_game_mode( mode ),
       M_score_left( 0 ),
       M_score_right( 0 )
@@ -223,7 +227,6 @@ FieldState::setPlayer( const PlayerT & player,
     if ( player.isTackling()
          && p->tackleCycle() == 1 )
     {
-        std::cerr << time() << " add tackler " << player.unum() << std::endl;
         M_tacklers.push_back( p );
     }
 
