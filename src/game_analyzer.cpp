@@ -64,9 +64,11 @@ GameAnalyzer::analyze( const FieldModel & model )
         if ( ! current ) continue;
 
         analyzeSingleKick( *prev, *current );
+
         updateBallToucher( model, i );
 
-        analyzeGoal( *prev, *current ); // goal analysis have to be called after updating ball toucher
+        analyzeGoal( *prev, *current ); // need to be called after updating ball toucher
+        analyzeOutOfBounds( *prev, *current ); // need to be called after updating ball toucher
     }
 
     std::sort( M_action_events.begin(), M_action_events.end(),
@@ -175,8 +177,8 @@ GameAnalyzer::analyzeGoal( const FieldState & prev,
     Player toucher;
     for ( const Player & p : M_touchers )
     {
-        std::cerr << current.time() << " "
-                  << side_char( p.side_ ) << ' ' << p.unum_ << std::endl;
+        // std::cerr << current.time() << " "
+        //           << side_char( p.side_ ) << ' ' << p.unum_ << std::endl;
         if ( toucher.side_ != NEUTRAL
              && toucher.side_ != p.side_ )
         {
@@ -218,6 +220,58 @@ GameAnalyzer::analyzeGoal( const FieldState & prev,
 
 /*-------------------------------------------------------------------*/
 void
+GameAnalyzer::analyzeOutOfBounds( const FieldState & prev,
+                                  const FieldState & current )
+{
+    if ( prev.gameMode().type() == current.gameMode().type() )
+    {
+        return;
+    }
+
+    if ( current.gameMode().type() == GameMode::KickIn_
+         || current.gameMode().type() == GameMode::CornerKick_
+         || current.gameMode().type() == GameMode::GoalKick_ )
+    {
+        Player toucher;
+
+        toucher.side_ = ( current.gameMode().side() == LEFT
+                          ? RIGHT
+                          : LEFT );
+        toucher.unum_ = Unum_Unknown;
+
+        std::cerr << current.time()
+                  << " OutOfBounds"
+                  << " l=" << M_kickers_left.size() << ',' << M_tacklers_left.size()
+                  << " r=" << M_kickers_right.size() << ',' <<  M_tacklers_right.size()
+                  << std::endl;
+
+        if ( toucher.side_ == LEFT
+             && M_kickers_left.size() + M_tacklers_left.size() == 1 )
+        {
+            toucher.unum_ = ( M_kickers_left.size() == 1 ? M_kickers_left.front().unum_
+                              : M_tacklers_left.size() == 1 ? M_tacklers_left.front().unum_
+                              : Unum_Unknown );
+        }
+        else if ( toucher.side_ == RIGHT
+                  && M_kickers_right.size() + M_tacklers_right.size() == 1 )
+        {
+            toucher.unum_ = ( M_kickers_right.size() == 1 ? M_kickers_right.front().unum_
+                              : M_tacklers_right.size() == 1 ? M_tacklers_right.front().unum_
+                              : Unum_Unknown );
+        }
+
+        ActionEvent::ConstPtr event( new OutOfBounds( toucher.side_, toucher.unum_,
+                                                      M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                      current.time(), current.ball().pos() ) );
+        M_action_events.push_back( event );
+
+        // clear ball touch flags
+        clearBallTouchers();
+    }
+}
+
+/*-------------------------------------------------------------------*/
+void
 GameAnalyzer::updateBallToucher( const FieldModel & model,
                                  const size_t frame_index )
 {
@@ -230,14 +284,6 @@ GameAnalyzer::updateBallToucher( const FieldModel & model,
     FieldState::ConstPtr current = model.fieldStates()[ frame_index ];
     if ( ! current )
     {
-        return;
-    }
-
-    if ( current->gameMode().type() != GameMode::PlayOn
-         && current->gameMode().type() != GameMode::GoalKick_
-         && current->gameMode().type() != GameMode::AfterGoal_ )
-    {
-        clearBallTouchers();
         return;
     }
 
@@ -254,6 +300,15 @@ GameAnalyzer::updateBallToucher( const FieldModel & model,
         return;
     }
 
+    if ( current->gameMode().type() != GameMode::PlayOn
+         && current->gameMode().type() != GameMode::GoalKick_
+         && current->gameMode().type() == prev->gameMode().type()
+         && current->gameMode().side() == prev->gameMode().side() )
+    {
+        clearBallTouchers();
+        return;
+    }
+
     clearBallTouchers();
 
     M_touch_time = prev->time();
@@ -265,7 +320,7 @@ GameAnalyzer::updateBallToucher( const FieldModel & model,
         M_touchers.emplace_back( p );
         M_kickers.emplace_back( p );
         if ( p->side() == LEFT ) M_kickers_left.emplace_back( p );
-        else if ( p->side() == RIGHT ) M_kickers_left.emplace_back( p );
+        else if ( p->side() == RIGHT ) M_kickers_right.emplace_back( p );
     }
 
     for ( const CoachPlayerObject * p : current->tacklers() )
@@ -273,11 +328,19 @@ GameAnalyzer::updateBallToucher( const FieldModel & model,
         M_touchers.emplace_back( p );
         M_tacklers.emplace_back( p );
         if ( p->side() == LEFT ) M_tacklers_left.emplace_back( p );
-        else if ( p->side() == RIGHT ) M_tacklers_left.emplace_back( p );
+        else if ( p->side() == RIGHT ) M_tacklers_right.emplace_back( p );
     }
 
     for ( const CoachPlayerObject * p : current->catchers() )
     {
         M_catchers.emplace_back( p );
     }
+
+    if ( 39 <= current->time().cycle() &&
+         current->time().cycle() <= 46 )
+        std::cerr << current->time() << " updateTouchers " << M_touchers.size()
+                  << " l=" << M_kickers_left.size() << "," << M_tacklers_left.size()
+                  << " r=" << M_kickers_right.size() << "," << M_tacklers_right.size()
+                  << std::endl;
+
 }

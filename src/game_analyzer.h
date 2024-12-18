@@ -79,6 +79,8 @@ private:
                             const FieldState & current );
     void analyzeGoal( const FieldState & prev,
                       const FieldState & current );
+    void analyzeOutOfBounds( const FieldState & prev,
+                             const FieldState & current );
     // void analyzeMultiKick( const FieldState & prev,
     //                        const FieldState & current );
 
