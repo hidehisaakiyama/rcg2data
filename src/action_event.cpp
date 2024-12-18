@@ -219,6 +219,43 @@ Tackle::actionName() const
 /*!
 
  */
+Foul::Foul( const SideID begin_ball_holder_side,
+            const int begin_ball_holder_unum,
+            const GameTime & begin_time,
+            const GameMode & begin_mode,
+            const Vector2D & begin_pos,
+            const SideID tackler_side,
+            const int tackler_unum,
+            const GameTime & end_time,
+            const Vector2D & end_pos )
+    : ActionEvent( ActionEvent::Tackle,
+                   begin_ball_holder_side, begin_ball_holder_unum,
+                   begin_time, begin_mode, begin_pos,
+                   tackler_side, tackler_unum,
+                   end_time, end_pos,
+                   true )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
+const char *
+Foul::actionName() const
+{
+    return "Foul";
+}
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
 Interception::Interception( const SideID kicker_side,
                             const int kicker_unum,
                             const GameTime & begin_time,

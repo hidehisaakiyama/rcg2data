@@ -68,7 +68,7 @@ public:
 
         // original type
         OutOfBounds, // Players kick/tackle the ball out of bounds
-        LooseBall, // Multiple players touched the ball simultaneously, and it resulted in a loose ball.
+        //LooseBall, // Multiple players touched the ball simultaneously, and it resulted in a loose ball.
         None,
     };
 
@@ -198,6 +198,30 @@ public:
             const int tackler_unum,
             const rcsc::GameTime & end_time,
             const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const override;
+
+};
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class Foul
+    : public ActionEvent {
+private:
+
+public:
+
+    Foul( const rcsc::SideID begin_ball_holder_side,
+          const int begin_ball_holder_unum,
+          const rcsc::GameTime & begin_time,
+          const rcsc::GameMode & begin_mode,
+          const rcsc::Vector2D & begin_pos,
+          const rcsc::SideID tackler_side,
+          const int tackler_unum,
+          const rcsc::GameTime & end_time,
+          const rcsc::Vector2D & end_pos );
 
     const char * actionName() const override;
 

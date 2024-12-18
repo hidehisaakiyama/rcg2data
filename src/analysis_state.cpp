@@ -96,7 +96,7 @@ StateNeutral::analyze( AnalysisContext & context,
          && target_state->catchers().empty() )
     {
         const CoachPlayerObject * kicker = target_state->kickers().front();
-        std::shared_ptr< AnalysisState > new_state( new StateSingleKick( target_index - 1,
+        std::shared_ptr< AnalysisState > new_state( new StateSingleKick( prev_state->frameIndex(),
                                                                          prev_state->time(),
                                                                          prev_state->gameMode(),
                                                                          kicker->side(),
@@ -310,11 +310,22 @@ StateSingleKick::detectSingleTackle( AnalysisContext & context,
     }
     else if ( tackler->side() != M_kicker_side )
     {
-        ActionEvent::ConstPtr event( new Tackle( M_kicker_side, M_kicker_unum,
-                                                 beginTime(), beginMode(), M_first_ball_pos,
-                                                 tackler->side(), tackler->unum(),
-                                                 prev.time(), prev.ball().pos() ) );
-        context.addActionEvent( event );
+        if ( current.gameMode().type() == GameMode::FoulCharge_ )
+        {
+            ActionEvent::ConstPtr event( new Foul( M_kicker_side, M_kicker_unum,
+                                                   beginTime(), beginMode(), M_first_ball_pos,
+                                                   tackler->side(), tackler->unum(),
+                                                   prev.time(), prev.ball().pos() ) );
+            context.addActionEvent( event );
+        }
+        else
+        {
+            ActionEvent::ConstPtr event( new Tackle( M_kicker_side, M_kicker_unum,
+                                                     beginTime(), beginMode(), M_first_ball_pos,
+                                                     tackler->side(), tackler->unum(),
+                                                     prev.time(), prev.ball().pos() ) );
+            context.addActionEvent( event );
+        }
     }
     else
     {
@@ -403,11 +414,22 @@ StateSingleKick::detectMultiKick( AnalysisContext & context,
         //           << " kicker=(" << side_char( M_kicker_side ) << ' ' << M_kicker_unum << ')'
         //           << " tacker=(" << side_char( opponent_tackler->side() ) << ' ' << opponent_tackler->unum() << ')'
         //           << std::endl;
-        ActionEvent::ConstPtr event( new Tackle( M_kicker_side, M_kicker_unum,
-                                                 beginTime(), beginMode(), M_first_ball_pos,
-                                                 opponent_tackler->side(), opponent_tackler->unum(),
-                                                 prev.time(), prev.ball().pos() ) );
-        context.addActionEvent( event );
+        if ( current.gameMode().type() == GameMode::FoulCharge_ )
+        {
+            ActionEvent::ConstPtr event( new Foul( M_kicker_side, M_kicker_unum,
+                                                     beginTime(), beginMode(), M_first_ball_pos,
+                                                     opponent_tackler->side(), opponent_tackler->unum(),
+                                                     prev.time(), prev.ball().pos() ) );
+            context.addActionEvent( event );
+        }
+        else
+        {
+            ActionEvent::ConstPtr event( new Tackle( M_kicker_side, M_kicker_unum,
+                                                     beginTime(), beginMode(), M_first_ball_pos,
+                                                     opponent_tackler->side(), opponent_tackler->unum(),
+                                                     prev.time(), prev.ball().pos() ) );
+            context.addActionEvent( event );
+        }
     }
     else if ( opponent_kicker )
     {
@@ -415,6 +437,33 @@ StateSingleKick::detectMultiKick( AnalysisContext & context,
                                                        beginTime(), beginMode(), M_first_ball_pos,
                                                        opponent_kicker->side(), opponent_kicker->unum(),
                                                        prev.time(), prev.ball().pos() ) );
+        context.addActionEvent( event );
+    }
+    else if ( teammate_tackler )
+    {
+        if ( current.gameMode().type() == GameMode::FoulCharge_ )
+        {
+            ActionEvent::ConstPtr event( new Foul( M_kicker_side, M_kicker_unum,
+                                                   beginTime(), beginMode(), M_first_ball_pos,
+                                                   teammate_tackler->side(), teammate_tackler->unum(),
+                                                   prev.time(), prev.ball().pos() ) );
+            context.addActionEvent( event );
+        }
+        else
+        {
+            ActionEvent::ConstPtr event( new BallTouch( M_kicker_side, M_kicker_unum,
+                                                        beginTime(), beginMode(), M_first_ball_pos,
+                                                        teammate_tackler->side(), teammate_tackler->unum(),
+                                                        prev.time(), prev.ball().pos() ) );
+            context.addActionEvent( event );
+        }
+    }
+    else if ( self_tackle )
+    {
+        ActionEvent::ConstPtr event( new BallTouch( M_kicker_side, M_kicker_unum,
+                                                    beginTime(), beginMode(), M_first_ball_pos,
+                                                    M_kicker_side, M_kicker_unum,
+                                                    prev.time(), prev.ball().pos() ) );
         context.addActionEvent( event );
     }
     else if ( self_kick && teammate_kicker )
@@ -427,7 +476,8 @@ StateSingleKick::detectMultiKick( AnalysisContext & context,
     }
     else if ( ! self_kick
               && opponent_count == 0
-              && teammate_count >= 2 )
+              && teammate_kicker
+              && ! teammate_tackler )
     {
         ActionEvent::ConstPtr event( new Pass( M_kicker_side, M_kicker_unum,
                                                beginTime(), beginMode(), M_first_ball_pos,
