@@ -5,14 +5,14 @@ cmake_minimum_required(VERSION 3.5)
 # The version number will be written in config.h.
 #
 project(rcg2data
-  VERSION "2021.10")
+  VERSION "2024.12")
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
 # compliler options
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -56,14 +56,6 @@ mark_as_advanced(
   LIBRCSC_INCLUDE_DIR
   LIBRCSC_LIBDIR
   )
-
-#
-# check boost
-#
-find_package(Boost 1.36.0 COMPONENTS system REQUIRED)
-if(NOT Boost_FOUND)
-  message(FATAL_ERROR "Boost not found!")
-endif()
 
 #
 # check zlib
