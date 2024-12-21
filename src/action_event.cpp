@@ -449,7 +449,7 @@ OutOfBounds::OutOfBounds( const rcsc::SideID kicker_side,
                           const rcsc::Vector2D & begin_pos,
                           const rcsc::GameTime & end_time,
                           const rcsc::Vector2D & end_pos )
-    : ActionEvent( ActionEvent::Dribble,
+    : ActionEvent( ActionEvent::OutOfBounds,
                    kicker_side, kicker_unum,
                    begin_time, begin_mode, begin_pos,
                    NEUTRAL, Unum_Unknown,
@@ -464,4 +464,52 @@ const char *
 OutOfBounds::actionName() const
 {
     return "OutOfBounds";
+}
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+MultiTouch::MultiTouch( const rcsc::SideID kicker_side,
+                        const int kicker_unum,
+                        const rcsc::GameTime & begin_time,
+                        const rcsc::GameMode & begin_mode,
+                        const rcsc::Vector2D & begin_pos,
+                        const rcsc::GameTime & end_time,
+                        const rcsc::Vector2D & end_pos )
+    : ActionEvent( ActionEvent::MultiTouch,
+                   kicker_side, kicker_unum,
+                   begin_time, begin_mode, begin_pos,
+                   NEUTRAL, Unum_Unknown,
+                   end_time, end_pos,
+                   false )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+MultiTouch::MultiTouch( const rcsc::SideID kicker_side,
+                        const int kicker_unum,
+                        const rcsc::GameTime & begin_time,
+                        const rcsc::GameMode & begin_mode,
+                        const rcsc::Vector2D & begin_pos,
+                        const rcsc::SideID end_side,
+                        const rcsc::GameTime & end_time,
+                        const rcsc::Vector2D & end_pos )
+    : ActionEvent( ActionEvent::MultiTouch,
+                   kicker_side, kicker_unum,
+                   begin_time, begin_mode, begin_pos,
+                   end_side, Unum_Unknown,
+                   end_time, end_pos,
+                   false )
+{
+
+}
+
+/*-------------------------------------------------------------------*/
+const char *
+MultiTouch::actionName() const
+{
+    return "MultiTouch";
 }

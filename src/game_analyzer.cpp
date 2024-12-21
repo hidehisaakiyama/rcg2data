@@ -65,6 +65,7 @@ GameAnalyzer::analyze( const FieldModel & model )
 
         analyzeSingleKick( *prev, *current );
         analyzeSingleTackle( *prev, *current );
+        analyzeMultiTouch( *prev, *current );
 
         updateBallToucher( model, i );
 
@@ -236,6 +237,139 @@ GameAnalyzer::analyzeSingleTackle( const FieldState & prev,
         M_action_events.push_back( event );
     }
 
+}
+
+/*-------------------------------------------------------------------*/
+void
+GameAnalyzer::analyzeMultiTouch( const FieldState & prev,
+                                 const FieldState & current )
+{
+    // check the number of the last ball kicker/tackler
+    if ( M_kickers.size() + M_tacklers.size() != 1 )
+    {
+        return;
+    }
+
+    if ( current.kickers().size() + current.tacklers().size() <= 1 )
+    {
+        return;
+    }
+
+
+    const Player begin_kicker = ( M_kickers.size() == 1 ? M_kickers.front()
+                                  : M_tacklers.size() == 1 ? M_tacklers.front()
+                                  : Player() );
+
+    const SideID toucher_side = getToucherSide( current );
+    if ( toucher_side == NEUTRAL )
+    {
+        // both side
+        // const SideID intercept_side = ( begin_kicker.side_ == LEFT ) ? RIGHT : LEFT;
+        // std::vector< int > toucher_unums;
+        // for ( const CoachPlayerObject * p : current.kickers() )
+        // {
+        //     if ( p->side() == intercept_side )
+        //     {
+        //         toucher_unums.push_back( p->unum() );
+        //     }
+        // }
+        // for ( const CoachPlayerObject * p : current.tacklers() )
+        // {
+        //     if ( p->side() == intercept_side )
+        //     {
+        //         toucher_unums.push_back( p->unum() );
+        //     }
+        // }
+        // const int intercept_unum = ( toucher_unums.size() == 1 ) ? toucher_unums.front() : Unum_Unknown;
+        // ActionEvent::ConstPtr event( new Interception( begin_kicker.side_, begin_kicker.unum_,
+        //                                                M_touch_time, M_touch_mode, M_touched_ball_pos,
+        //                                                intercept_side, intercept_unum,
+        //                                                prev.time(), prev.ball().pos() ) );
+        ActionEvent::ConstPtr event( new MultiTouch( begin_kicker.side_, begin_kicker.unum_,
+                                                     M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                     prev.time(), prev.ball().pos() ) );
+        M_action_events.push_back( event );
+    }
+    else if ( begin_kicker.side_ != NEUTRAL
+              && begin_kicker.side_ != toucher_side )
+    {
+        // opponent side
+        ActionEvent::ConstPtr event( new Interception( begin_kicker.side_, begin_kicker.unum_,
+                                                       M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                       toucher_side, Unum_Unknown,
+                                                       prev.time(), prev.ball().pos() ) );
+        M_action_events.push_back( event );
+    }
+    else if ( begin_kicker.side_ != NEUTRAL
+              && begin_kicker.side_ == toucher_side )
+    {
+        // same team
+        // ActionEvent::ConstPtr event( new MultiTouch( begin_kicker.side_, begin_kicker.unum_,
+        //                                              M_touch_time, M_touch_mode, M_touched_ball_pos,
+        //                                              toucher_side,
+        //                                              prev.time(), prev.ball().pos() ) );
+        ActionEvent::ConstPtr event( new Pass( begin_kicker.side_, begin_kicker.unum_,
+                                               M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                               toucher_side, Unum_Unknown,
+                                               prev.time(), prev.ball().pos(),
+                                               false ) );
+        M_action_events.push_back( event );
+    }
+
+}
+
+/*-------------------------------------------------------------------*/
+SideID
+GameAnalyzer::getToucherSide( const FieldState & state )
+{
+    bool exist_left = false;
+    bool exist_right = false;
+
+    for ( const CoachPlayerObject * p : state.kickers() )
+    {
+        if ( p->side() == LEFT ) exist_left = true;
+        else if ( p->side() == RIGHT ) exist_right = true;
+    }
+
+    for ( const CoachPlayerObject * p : state.tacklers() )
+    {
+        if ( p->side() == LEFT ) exist_left = true;
+        else if ( p->side() == RIGHT ) exist_right = true;
+    }
+
+    return ( ( exist_left && exist_right ) ? NEUTRAL
+             : exist_left ? LEFT
+             : exist_right ? RIGHT
+             : NEUTRAL );
+}
+
+/*-------------------------------------------------------------------*/
+bool
+GameAnalyzer::checkBeginKickerTouch( const FieldState & state )
+{
+    const Player begin_kicker = ( M_kickers.size() == 1 ? M_kickers.front()
+                                  : M_tacklers.size() == 1 ? M_tacklers.front()
+                                  : Player() );
+
+    for ( const CoachPlayerObject * p : state.kickers() )
+    {
+        if ( p->side() == begin_kicker.side_
+             && p->unum() == begin_kicker.unum_ )
+        {
+            return true;
+        }
+    }
+
+    for ( const CoachPlayerObject * p : state.tacklers() )
+    {
+        if ( p->side() == begin_kicker.side_
+             && p->unum() == begin_kicker.unum_ )
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /*-------------------------------------------------------------------*/

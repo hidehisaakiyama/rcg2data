@@ -83,8 +83,10 @@ private:
                             const FieldState & current );
     void analyzeSingleTackle( const FieldState & prev,
                               const FieldState & current );
-    // void analyzeMultiTouch( const FieldState & prev,
-    //                        const FieldState & current );
+    void analyzeMultiTouch( const FieldState & prev,
+                            const FieldState & current );
+    rcsc::SideID getToucherSide( const FieldState & state );
+    bool checkBeginKickerTouch( const FieldState & state );
 
     // after updateBallToucher
     void analyzeGoal( const FieldState & prev,
