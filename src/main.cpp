@@ -36,7 +36,36 @@
 #include <rcsc/rcg/parser.h>
 
 #include <iostream>
+#include <fstream>
+#include <filesystem>
 
+namespace {
+
+/*-------------------------------------------------------------------*/
+std::string
+get_base_name( const std::string & path )
+{
+    // remove all extension (".rcg" or ".rcg.gz")from file name
+    std::filesystem::path p( path );
+
+    // if file name has .gz extension, remove it
+    if ( p.extension() == ".gz" )
+    {
+        p.replace_extension();
+    }
+
+    // if file name has .rcg extension, remove it
+    if ( p.extension() == ".rcg" )
+    {
+        p.replace_extension();
+    }
+
+    return p.string();
+}
+
+}
+
+/*-------------------------------------------------------------------*/
 int
 main( int argc, char **argv )
 {
@@ -52,14 +81,26 @@ main( int argc, char **argv )
         return 1;
     }
 
-    const std::string filepath = Options::instance().gameLogFilePath();
+    const std::string infile = Options::instance().gameLogFilePath();
 
-    rcsc::gzifstream fin( filepath.c_str() );
+    rcsc::gzifstream fin( infile.c_str() );
     if ( ! fin.is_open() )
     {
-        std::cerr << "ERROR: Could not open the file [" << filepath << ']' << std::endl;
+        std::cerr << "ERROR: Could not open the file [" << infile << ']' << std::endl;
         return 1;
     }
+
+
+    const std::string basename = get_base_name( infile );
+    const std::string event_csv = basename + ".event.csv";
+
+    std::ofstream fout( event_csv );
+    if ( ! fout.is_open() )
+    {
+        std::cerr << "Failed to open the output file : " << event_csv << std::endl;
+        return 1;
+    }
+
 
     rcsc::rcg::Parser::Ptr parser = rcsc::rcg::Parser::create( fin );
     if ( ! parser )
@@ -68,7 +109,8 @@ main( int argc, char **argv )
         return 1;
     }
 
-    std::cerr << "analyzing ... [" << filepath << "]" << std::endl;
+    std::cerr << "in ...  [" << infile << "]" << std::endl;
+    std::cerr << "out ... [" << event_csv << "]" << std::endl;
 
     FieldModel field_model;
     RCGReader reader( field_model );
@@ -85,7 +127,7 @@ main( int argc, char **argv )
         return 1;
     }
 
-    analyzer.print( std::cout );
+    analyzer.print( fout );
 
     return 0;
 }
