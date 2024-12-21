@@ -40,198 +40,330 @@
 using namespace rcsc;
 
 /*-------------------------------------------------------------------*/
-/*!
-
- */
 GameAnalyzer::GameAnalyzer()
+    : M_touch_time( -1, 0 )
 {
 
 }
 
 /*-------------------------------------------------------------------*/
-/*!
-
- */
 bool
 GameAnalyzer::analyze( const FieldModel & model )
 {
-    for ( size_t i = 0; i < model.fieldStates().size(); ++i )
+    if ( model.fieldStates().empty() )
     {
-        extractKickEvent( model, i );
+        return false;
     }
 
-    extractShootEvent( model );
-    extractPassEvent( model );
-    extractDribbleEvent( model );
+    for ( size_t i = 1; i < model.fieldStates().size(); ++i )
+    {
+        FieldState::ConstPtr prev = model.fieldStates()[ i - 1 ];
+        if ( ! prev ) continue;
+
+        FieldState::ConstPtr current = model.fieldStates()[ i ];
+        if ( ! current ) continue;
+
+        analyzeSingleKick( *prev, *current );
+        analyzeSingleTackle( *prev, *current );
+        analyzeMultiTouch( *prev, *current );
+
+        updateBallToucher( model, i );
+
+        analyzeGoal( *prev, *current ); // need to be called after updating ball toucher
+        analyzeOutOfBounds( *prev, *current ); // need to be called after updating ball toucher
+    }
 
     std::sort( M_action_events.begin(), M_action_events.end(),
                []( const ActionEvent::ConstPtr & lhs,
                    const ActionEvent::ConstPtr & rhs )
                {
-                   return lhs->startTime() < rhs->startTime();
+                   return lhs->beginTime() < rhs->beginTime();
                } );
 
     return true;
 }
 
 /*-------------------------------------------------------------------*/
-/*!
-
- */
-void
-GameAnalyzer::extractKickEvent( const FieldModel & model,
-                                const size_t idx )
+std::ostream &
+GameAnalyzer::print( std::ostream & os ) const
 {
-    FieldState::ConstPtr state = model.getState( idx );
-    if ( ! state )
+    ActionEvent::print_header_csv( os );
+
+    for ( const ActionEvent::ConstPtr & ev : M_action_events )
     {
-        std::cerr << "ERROR: (GameAnalyzer::extractKickEvent) no state at " << idx << std::endl;
-        return;
+        ev->printCSV( os );
     }
 
-    if ( state->kickers().empty() )
-    {
-        // no kicker
-        return;
-    }
-
-    if ( state->kickers().size() > 1
-         || ! state->tacklers().empty()
-         || ! state->catchers().empty() )
-    {
-        // not a single kick
-        return;
-    }
-
-    FieldState::ConstPtr prev_state = model.getState( idx - 1 );
-
-    if ( ! prev_state )
-    {
-        std::cerr << "ERROR: (GameAnalyzer::extractKickEvent) no previous state at " << idx << std::endl;
-        return;
-    }
-
-    const CoachPlayerObject * kicker = state->kickers().front();
-
-    // check the ball volocity to confirm the successful kick
-    // (prev_vel + accel + error) * decay = vel
-    // prev_vel + accel + error = vel / decay
-    // accel + error = vel / decay - prev_vel
-
-    const Vector2D prev_vel = prev_state->ball().vel();
-    const double prev_speed = prev_vel.r();
-    const double max_rand = prev_speed * ServerParam::i().ballRand();
-
-    const Vector2D estimated_error = state->ball().vel() / ServerParam::i().ballDecay() - prev_vel;
-
-    if ( estimated_error.r() < max_rand )
-    {
-        // no kick effect -> failed kick?
-        std::cerr << "INFO: (GameAnalyzer::extractKickEvent) detect kicker or tackler, but detect no kick effect." << idx << std::endl;
-        return;
-    }
-
-    Kick::ConstPtr kick( new Kick( idx - 1,
-                                   kicker->side(),
-                                   kicker->unum(),
-                                   prev_state->time(),
-                                   prev_state->gameMode(),
-                                   prev_state->ball().pos(),
-                                   ( state->ball().pos() - prev_state->ball().pos() ) ) );
-    M_single_kicks.push_back( kick );
+    return os;
 }
 
 /*-------------------------------------------------------------------*/
-/*!
-
- */
 void
-GameAnalyzer::extractShootEvent( const FieldModel & model )
+GameAnalyzer::clearBallTouchers()
 {
-    const std::vector< FieldState::Ptr > & states = model.fieldStates();
-    const size_t max_states = states.size();
+    M_touchers.clear();
+    M_kickers.clear();
+    M_kickers_left.clear();
+    M_kickers_right.clear();
+    M_tacklers.clear();
+    M_tacklers_left.clear();
+    M_tacklers_right.clear();
+    M_catchers.clear();
+}
 
-    GameMode mode;
-
-    for ( size_t i = 1; i < max_states; ++i )
+/*-------------------------------------------------------------------*/
+void
+GameAnalyzer::analyzeSingleKick( const FieldState & prev,
+                                 const FieldState & current )
+{
+    // check the number of the last ball kicker/tackler
+    if ( M_kickers.size() + M_tacklers.size() != 1 )
     {
-        FieldState::ConstPtr s = states[i];
-        if ( mode.type() != GameMode::AfterGoal_
-             && s->gameMode().type() == GameMode::AfterGoal_ )
+        return;
+    }
+
+    if ( current.kickers().size() + current.tacklers().size() > 1 )
+    {
+        return;
+    }
+
+    if ( current.kickers().size() != 1 )
+    {
+        return;
+    }
+
+    const Player begin_kicker = ( M_kickers.size() == 1 ? M_kickers.front()
+                                  : M_tacklers.size() == 1 ? M_tacklers.front()
+                                  : Player() );
+
+    const CoachPlayerObject * end_kicker = current.kickers().front();
+    if ( ! end_kicker ) return;
+
+    if ( end_kicker->side() == begin_kicker.side_ )
+    {
+        if ( end_kicker->unum() != begin_kicker.unum_ )
         {
-            //std::cerr << "Detect shoot " << s->time() << std::endl;
-            SideID kicker_side = NEUTRAL;
-            int kicker_unum = Unum_Unknown;
-            Vector2D start_pos = Vector2D::INVALIDATED;
-            GameTime start_time;
-            GameMode start_mode;
-            Vector2D end_pos = s->ball().pos();
-            GameTime end_time = s->time();
+            ActionEvent::ConstPtr event( new Pass( begin_kicker.side_, begin_kicker.unum_,
+                                                   M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                   end_kicker->side(), end_kicker->unum(),
+                                                   prev.time(), prev.ball().pos(),
+                                                   true ) );
+            M_action_events.push_back( event );
+        }
+        else if ( end_kicker->unum() == begin_kicker.unum_
+                  && end_kicker->dashCount() > begin_kicker.dash_count_ )
+        {
+            ActionEvent::ConstPtr event( new Dribble( begin_kicker.side_, begin_kicker.unum_,
+                                                      M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                      prev.time(), prev.ball().pos(),
+                                                      true ) );
+            M_action_events.push_back( event );
+        }
+    }
+    else
+    {
+        ActionEvent::ConstPtr event( new Interception( begin_kicker.side_, begin_kicker.unum_,
+                                                       M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                       end_kicker->side(), end_kicker->unum(),
+                                                       prev.time(), prev.ball().pos() ) );
+        M_action_events.push_back( event );
+    }
+}
 
-            // find the kick
-            for ( size_t j = i - 1; j > 0; --j )
+/*-------------------------------------------------------------------*/
+void
+GameAnalyzer::analyzeSingleTackle( const FieldState & prev,
+                                   const FieldState & current )
+{
+    // check the number of the last ball kicker/tackler
+    if ( M_kickers.size() + M_tacklers.size() != 1 )
+    {
+        return;
+    }
+
+    if ( current.kickers().size() + current.tacklers().size() > 1 )
+    {
+        return;
+    }
+
+    if ( current.tacklers().size() != 1 )
+    {
+        return;
+    }
+
+    const Player begin_kicker = ( M_kickers.size() == 1 ? M_kickers.front()
+                                  : M_tacklers.size() == 1 ? M_tacklers.front()
+                                  : Player() );
+    const CoachPlayerObject * end_tackler = current.tacklers().front();
+    if ( ! end_tackler ) return;
+
+    if ( end_tackler->side() == begin_kicker.side_ )
+    {
+        if ( end_tackler->unum() != begin_kicker.unum_ )
+        {
+            ActionEvent::ConstPtr event( new Pass( begin_kicker.side_, begin_kicker.unum_,
+                                                   M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                   end_tackler->side(), end_tackler->unum(),
+                                                   prev.time(), prev.ball().pos(),
+                                                   false ) ); // failure pass
+            M_action_events.push_back( event );
+        }
+        else if ( end_tackler->unum() == begin_kicker.unum_ )
+        {
+            if ( end_tackler->dashCount() > begin_kicker.dash_count_ )
             {
-                if ( ! states[j]->kickers().empty() )
-                {
-                    //std::cerr << "Find shoot kicker " << states[j]->time() << std::endl;
-                    const rcsc::CoachPlayerObject * kicker = nullptr;
-                    for ( CoachPlayerObject::Cont::const_iterator p = states[j]->kickers().begin();
-                          p != states[j]->kickers().end();
-                          ++p )
-                    {
-                        if ( ( *p )->side() == s->gameMode().side() )
-                        {
-                            kicker = *p;
-                            break;
-                        }
-                    }
-
-                    if ( kicker )
-                    {
-                        kicker_side = kicker->side();
-                        kicker_unum = kicker->unum();
-                        start_pos = states[j - 1]->ball().pos();
-                        start_time = states[j - 1]->time();
-                        start_mode = states[j - 1]->gameMode();
-                        break;
-                    }
-                }
+                ActionEvent::ConstPtr event( new Dribble( begin_kicker.side_, begin_kicker.unum_,
+                                                          M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                          prev.time(), prev.ball().pos(),
+                                                          false ) ); // failure dribble
+                M_action_events.push_back( event );
             }
-
-            if ( kicker_side != NEUTRAL
-                 && start_pos.isValid() )
+            else
             {
-                ActionEvent::ConstPtr ptr( new Shoot( kicker_side, kicker_unum, start_time, start_mode, start_pos, end_time, end_pos, true ) );
-                M_action_events.push_back( ptr );
+                ActionEvent::ConstPtr event( new BallTouch( begin_kicker.side_, begin_kicker.unum_,
+                                                            M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                            prev.time(), prev.ball().pos() ) );
+                M_action_events.push_back( event );
             }
         }
 
-        mode = s->gameMode();
     }
-}
-
-
-/*-------------------------------------------------------------------*/
-/*!
-
- */
-void
-GameAnalyzer::extractPassEvent( const FieldModel & model )
-{
-    extractPassEventSimple( model );
-}
-
-
-/*-------------------------------------------------------------------*/
-namespace {
-
-bool
-exist_other_ball_collider( const CoachPlayerObject * kicker,
-                           const CoachPlayerObject::Cont & colliders )
-{
-    for ( const CoachPlayerObject * p : colliders )
+    else
     {
-        if ( kicker != p )
+        ActionEvent::ConstPtr event( new Interception( begin_kicker.side_, begin_kicker.unum_,
+                                                       M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                       end_tackler->side(), end_tackler->unum(),
+                                                       prev.time(), prev.ball().pos() ) );
+        M_action_events.push_back( event );
+    }
+
+}
+
+/*-------------------------------------------------------------------*/
+void
+GameAnalyzer::analyzeMultiTouch( const FieldState & prev,
+                                 const FieldState & current )
+{
+    // check the number of the last ball kicker/tackler
+    if ( M_kickers.size() + M_tacklers.size() != 1 )
+    {
+        return;
+    }
+
+    if ( current.kickers().size() + current.tacklers().size() <= 1 )
+    {
+        return;
+    }
+
+
+    const Player begin_kicker = ( M_kickers.size() == 1 ? M_kickers.front()
+                                  : M_tacklers.size() == 1 ? M_tacklers.front()
+                                  : Player() );
+
+    const SideID toucher_side = getToucherSide( current );
+    if ( toucher_side == NEUTRAL )
+    {
+        // both side
+        // const SideID intercept_side = ( begin_kicker.side_ == LEFT ) ? RIGHT : LEFT;
+        // std::vector< int > toucher_unums;
+        // for ( const CoachPlayerObject * p : current.kickers() )
+        // {
+        //     if ( p->side() == intercept_side )
+        //     {
+        //         toucher_unums.push_back( p->unum() );
+        //     }
+        // }
+        // for ( const CoachPlayerObject * p : current.tacklers() )
+        // {
+        //     if ( p->side() == intercept_side )
+        //     {
+        //         toucher_unums.push_back( p->unum() );
+        //     }
+        // }
+        // const int intercept_unum = ( toucher_unums.size() == 1 ) ? toucher_unums.front() : Unum_Unknown;
+        // ActionEvent::ConstPtr event( new Interception( begin_kicker.side_, begin_kicker.unum_,
+        //                                                M_touch_time, M_touch_mode, M_touched_ball_pos,
+        //                                                intercept_side, intercept_unum,
+        //                                                prev.time(), prev.ball().pos() ) );
+        ActionEvent::ConstPtr event( new MultiTouch( begin_kicker.side_, begin_kicker.unum_,
+                                                     M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                     prev.time(), prev.ball().pos() ) );
+        M_action_events.push_back( event );
+    }
+    else if ( begin_kicker.side_ != NEUTRAL
+              && begin_kicker.side_ != toucher_side )
+    {
+        // opponent side
+        ActionEvent::ConstPtr event( new Interception( begin_kicker.side_, begin_kicker.unum_,
+                                                       M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                       toucher_side, Unum_Unknown,
+                                                       prev.time(), prev.ball().pos() ) );
+        M_action_events.push_back( event );
+    }
+    else if ( begin_kicker.side_ != NEUTRAL
+              && begin_kicker.side_ == toucher_side )
+    {
+        // same team
+        // ActionEvent::ConstPtr event( new MultiTouch( begin_kicker.side_, begin_kicker.unum_,
+        //                                              M_touch_time, M_touch_mode, M_touched_ball_pos,
+        //                                              toucher_side,
+        //                                              prev.time(), prev.ball().pos() ) );
+        ActionEvent::ConstPtr event( new Pass( begin_kicker.side_, begin_kicker.unum_,
+                                               M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                               toucher_side, Unum_Unknown,
+                                               prev.time(), prev.ball().pos(),
+                                               false ) );
+        M_action_events.push_back( event );
+    }
+
+}
+
+/*-------------------------------------------------------------------*/
+SideID
+GameAnalyzer::getToucherSide( const FieldState & state )
+{
+    bool exist_left = false;
+    bool exist_right = false;
+
+    for ( const CoachPlayerObject * p : state.kickers() )
+    {
+        if ( p->side() == LEFT ) exist_left = true;
+        else if ( p->side() == RIGHT ) exist_right = true;
+    }
+
+    for ( const CoachPlayerObject * p : state.tacklers() )
+    {
+        if ( p->side() == LEFT ) exist_left = true;
+        else if ( p->side() == RIGHT ) exist_right = true;
+    }
+
+    return ( ( exist_left && exist_right ) ? NEUTRAL
+             : exist_left ? LEFT
+             : exist_right ? RIGHT
+             : NEUTRAL );
+}
+
+/*-------------------------------------------------------------------*/
+bool
+GameAnalyzer::checkBeginKickerTouch( const FieldState & state )
+{
+    const Player begin_kicker = ( M_kickers.size() == 1 ? M_kickers.front()
+                                  : M_tacklers.size() == 1 ? M_tacklers.front()
+                                  : Player() );
+
+    for ( const CoachPlayerObject * p : state.kickers() )
+    {
+        if ( p->side() == begin_kicker.side_
+             && p->unum() == begin_kicker.unum_ )
+        {
+            return true;
+        }
+    }
+
+    for ( const CoachPlayerObject * p : state.tacklers() )
+    {
+        if ( p->side() == begin_kicker.side_
+             && p->unum() == begin_kicker.unum_ )
         {
             return true;
         }
@@ -240,475 +372,176 @@ exist_other_ball_collider( const CoachPlayerObject * kicker,
     return false;
 }
 
-}
-
 /*-------------------------------------------------------------------*/
-/*!
-
- */
 void
-GameAnalyzer::extractPassEventSimple( const FieldModel & model )
+GameAnalyzer::analyzeGoal( const FieldState & prev,
+                           const FieldState & current )
 {
-    GameTime last_kick_time( -1, 0 );
-    GameMode last_kick_mode;
-    SideID last_kicker_side = NEUTRAL;
-    int last_kicker_unum = Unum_Unknown;
-    Vector2D last_kick_pos = Vector2D::INVALIDATED;
-
-    for ( size_t i = 1; i < model.fieldStates().size(); ++i )
+    if ( prev.gameMode().type() == GameMode::AfterGoal_
+         || current.gameMode().type() != GameMode::AfterGoal_ )
     {
-        const FieldState::ConstPtr prev_state = model.getState( i - 1 );
-        const FieldState::ConstPtr state = model.getState( i );
+        return;
+    }
 
-        if ( ! prev_state ) continue;
-        if ( ! state ) continue;
-
-        if ( ( prev_state->gameMode().type() == GameMode::PlayOn
-               && state->gameMode().type() != GameMode::PlayOn )
-             ||  ( state->gameMode().type() != GameMode::PlayOn
-                   && state->gameMode().type() != GameMode::GoalKick_ )
-             )
+    Player toucher;
+    for ( const Player & p : M_touchers )
+    {
+        // std::cerr << current.time() << " "
+        //           << side_char( p.side_ ) << ' ' << p.unum_ << std::endl;
+        if ( toucher.side_ != NEUTRAL
+             && toucher.side_ != p.side_ )
         {
-            last_kick_time.assign( -1, 0 );
-            last_kick_mode = GameMode();
-            last_kicker_side = NEUTRAL;
-            last_kicker_unum = Unum_Unknown;
-            last_kick_pos = Vector2D::INVALIDATED;
+            toucher.side_ = NEUTRAL;
+            toucher.unum_ = Unum_Unknown;
+            break;
+        }
+
+        if ( toucher.side_ == p.side_
+             && toucher.unum_ != Unum_Unknown )
+        {
+            toucher.unum_ = Unum_Unknown;
             continue;
         }
 
-        // exist tackling player -> reset
-        if ( ! state->tacklers().empty() )
+        if ( toucher.side_ == NEUTRAL
+             && toucher.unum_ == Unum_Unknown )
         {
-            std::cerr << state->time() << " (extractPass) exist tackler. count=" << state->tacklers().size() << std::endl;
-            for ( const CoachPlayerObject * p : state->tacklers() )
-            {
-                if ( p->tackleCycle() == 1
-                     && p->side() != last_kicker_side )
-                {
-                    ActionEvent::ConstPtr action( new Tackle( last_kicker_side, last_kicker_unum,
-                                                              last_kick_time, last_kick_mode, last_kick_pos,
-                                                              p->side(), p->unum(),
-                                                              prev_state->time(), prev_state->ball().pos() ) );
-                    M_action_events.push_back( action );
-                    break;
-                }
-            }
-
-            last_kick_time.assign( -1, 0 );
-            last_kick_mode = GameMode();
-            last_kicker_side = NEUTRAL;
-            last_kicker_unum = Unum_Unknown;
-            last_kick_pos = Vector2D::INVALIDATED;
-            continue;
-        }
-
-        if ( state->kickers().empty() )
-        {
-            continue;
-        }
-
-        const CoachPlayerObject * kicker =  state->kickers().front();
-        if ( state->kickers().size() == 1
-             && ! exist_other_ball_collider( kicker, state->ballColliders() )
-             && state->tacklers().empty()
-             && state->catchers().empty() )
-        {
-            // only 1 kicker
-
-            if ( last_kicker_side == NEUTRAL )
-            {
-                // new kick sequence
-                //std::cerr << "NewKickSequence? " << prev_state->time() << std::endl;
-            }
-            else if ( kicker->side() != last_kicker_side )
-            {
-                // interception
-                //std::cerr << "Intercept? " << prev_state->time() << std::endl;
-                ActionEvent::ConstPtr intercept( new Interception( last_kicker_side, last_kicker_unum,
-                                                                   last_kick_time, last_kick_mode, last_kick_pos,
-                                                                   kicker->side(), kicker->unum(),
-                                                                   prev_state->time(), prev_state->ball().pos() ) );
-                M_action_events.push_back( intercept );
-            }
-            else if ( kicker->unum() == last_kicker_unum )
-            {
-                // hold or dribble dribble
-                //std::cerr << "HoldOrDribble? " << prev_state->time() << std::endl;
-            }
-            else
-            {
-                // pass
-                // std::cerr << "Pass? "
-                //           << last_kick_time << "," << prev_state->time()
-                //           << "," << side_str( last_kicker_side )
-                //           << "," << ( last_kicker_side == LEFT ? model.leftTeamName()
-                //                       : last_kicker_side == RIGHT ? model.rightTeamName()
-                //                       : "Unknown" )
-                //           << "," << last_kicker_unum
-                //           << "," << kicker->unum()
-                //           << std::endl;
-                ActionEvent::ConstPtr pass( new Pass( last_kicker_side, last_kicker_unum,
-                                                      last_kick_time, last_kick_mode, last_kick_pos,
-                                                      kicker->side(), kicker->unum(),
-                                                      prev_state->time(), prev_state->ball().pos(),
-                                                      true ) );
-                M_action_events.push_back( pass );
-            }
-
-            last_kick_time = prev_state->time();
-            last_kick_mode = prev_state->gameMode();
-            last_kicker_side = kicker->side();
-            last_kicker_unum = kicker->unum();
-            last_kick_pos = prev_state->ball().pos();
-        }
-        else
-        {
-            // Several players touch the ball
-            if ( last_kicker_side != NEUTRAL )
-            {
-                ActionEvent::ConstPtr action;
-
-                for ( const CoachPlayerObject * p : state->ballColliders() )
-                {
-                    if ( p->side() != last_kicker_side )
-                    {
-                        //std::cerr << "Collide? and Intercept?" << std::endl;
-                        action = ActionEvent::ConstPtr( new Interception(  last_kicker_side, last_kicker_unum,
-                                                                           last_kick_time, last_kick_mode, last_kick_pos,
-                                                                           p->side(), p->unum(),
-                                                                           prev_state->time(), prev_state->ball().pos() ) );
-                        break;
-                    }
-                    else
-                    {
-                        //std::cerr << "Collide but same side?" << std::endl;
-                    }
-                }
-
-                for ( const CoachPlayerObject * p : state->tacklers() )
-                {
-                    if ( p->side() != last_kicker_side )
-                    {
-                        //std::cerr << "Tackle?" << std::endl;
-                        action = ActionEvent::ConstPtr( new Tackle( last_kicker_side, last_kicker_unum,
-                                                                    last_kick_time, last_kick_mode, last_kick_pos,
-                                                                    p->side(), p->unum(),
-                                                                    prev_state->time(), prev_state->ball().pos() ) );
-                        break;
-                    }
-                }
-
-                for ( const CoachPlayerObject * p : state->catchers() )
-                {
-                    if ( p->side() != last_kicker_side )
-                    {
-                        //std::cerr << "Catch?" << std::endl;
-                        action = ActionEvent::ConstPtr( new KeeperSave( last_kicker_side, last_kicker_unum,
-                                                                        last_kick_time, last_kick_mode, last_kick_pos,
-                                                                        p->side(), p->unum(),
-                                                                        prev_state->time(), prev_state->ball().pos() ) );
-                        break;
-                    }
-                }
-
-                for ( const CoachPlayerObject * p : state->kickers() )
-                {
-                    if ( p->side() != last_kicker_side )
-                    {
-                        //std::cerr << "Intercept?" << std::endl;
-                        action = ActionEvent::ConstPtr( new Interception( last_kicker_side, last_kicker_unum,
-                                                                          last_kick_time, last_kick_mode, last_kick_pos,
-                                                                          p->side(), p->unum(),
-                                                                          prev_state->time(), prev_state->ball().pos() ) );
-                        break;
-                    }
-                }
-
-                if ( action )
-                {
-                    M_action_events.push_back( action );
-                }
-            }
-
-            // reset the kick sequence
-            last_kick_time.assign( -1, 0 );
-            last_kick_mode = GameMode();
-            last_kicker_side = NEUTRAL;
-            last_kicker_unum = Unum_Unknown;
-            last_kick_pos = Vector2D::INVALIDATED;
+            toucher = p;
         }
     }
-}
 
-#if 0
-/*-------------------------------------------------------------------*/
-/*!
-
- */
-void
-GameAnalyzer::extractPassEventByKicks( const FieldModel & /*model*/ )
-{
-    Kick last_kick;
-    last_kick.side_ = NEUTRAL;
-
-    for ( const Kick::ConstPtr & kick : M_single_kicks )
+    if ( toucher.side_ != current.gameMode().side() )
     {
-        if ( kick.mode_.type() != GameMode::PlayOn )
-        {
-            last_kick = kick;
-            continue;
-        }
-
-        if ( kick.unum_ == last_kick.unum_ )
-        {
-            last_kick = kick;
-            continue;
-        }
-
-        if ( kick.side_ == NEUTRAL
-             || kick.side_ != last_kick.side_ )
-        {
-            std::cout << "Intercept?? "
-                      << last_kick.time_ << " " << side_str( last_kick.side_ ) << " " << last_kick.unum_ << " " << last_kick.pos_ << " -> "
-                      << kick.time_ << " " << side_str( kick.side_ ) << " " << kick.unum_ << " " << last_kick.pos_ << std::endl;
-        }
-        else
-        {
-            std::cout << "Pass?? "
-                      << last_kick.time_ << " " << side_str( last_kick.side_ ) << " " << last_kick.unum_ << " " << last_kick.pos_ << " -> "
-                      << kick.time_ << " " << side_str( kick.side_ ) << " " << kick.unum_ << " " << last_kick.pos_ << std::endl;
-        }
-
-        last_kick = kick;
+        // TODO: estimate the exact scoring kicker
+        ActionEvent::ConstPtr event( new OwnGoal( toucher.side_, toucher.unum_,
+                                                  M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                  current.time(), current.ball().pos() ) );
+        M_action_events.push_back( event );
+    }
+    else
+    {
+        ActionEvent::ConstPtr event( new Shoot( toucher.side_, toucher.unum_,
+                                                M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                current.time(), current.ball().pos() ) );
+        M_action_events.push_back( event );
     }
 }
-#endif
 
 /*-------------------------------------------------------------------*/
 void
-GameAnalyzer::extractDribbleEvent( const FieldModel & model )
+GameAnalyzer::analyzeOutOfBounds( const FieldState & prev,
+                                  const FieldState & current )
 {
-    Kick last_kick;
-    Vector2D kicker_pos = Vector2D::INVALIDATED;
-    int kicker_dash_count = 0;
-
-    for ( size_t i = 1; i < model.fieldStates().size(); ++i )
+    if ( prev.gameMode().type() == current.gameMode().type() )
     {
-        const FieldState::ConstPtr prev_state = model.getState( i - 1 );
-        const FieldState::ConstPtr state = model.getState( i );
+        return;
+    }
 
-        if ( ! prev_state ) continue;
-        if ( ! state ) continue;
+    if ( current.gameMode().type() == GameMode::KickIn_
+         || current.gameMode().type() == GameMode::CornerKick_
+         || current.gameMode().type() == GameMode::GoalKick_ )
+    {
+        Player toucher;
 
-        // playmode changed -> reset last kicker
-        if ( ( prev_state->gameMode().type() == GameMode::PlayOn
-             && state->gameMode().type() != GameMode::PlayOn )
-             ||  ( state->gameMode().type() != GameMode::PlayOn
-                   && state->gameMode().type() != GameMode::GoalKick_ )
-             )
+        toucher.side_ = ( current.gameMode().side() == LEFT
+                          ? RIGHT
+                          : LEFT );
+        toucher.unum_ = Unum_Unknown;
 
+        // std::cerr << current.time()
+        //           << " OutOfBounds"
+        //           << " l=" << M_kickers_left.size() << ',' << M_tacklers_left.size()
+        //           << " r=" << M_kickers_right.size() << ',' <<  M_tacklers_right.size()
+        //           << std::endl;
+
+        if ( toucher.side_ == LEFT
+             && M_kickers_left.size() + M_tacklers_left.size() == 1 )
         {
-            last_kick.reset();
-            kicker_dash_count = 0;
-            continue;
+            toucher.unum_ = ( M_kickers_left.size() == 1 ? M_kickers_left.front().unum_
+                              : M_tacklers_left.size() == 1 ? M_tacklers_left.front().unum_
+                              : Unum_Unknown );
+        }
+        else if ( toucher.side_ == RIGHT
+                  && M_kickers_right.size() + M_tacklers_right.size() == 1 )
+        {
+            toucher.unum_ = ( M_kickers_right.size() == 1 ? M_kickers_right.front().unum_
+                              : M_tacklers_right.size() == 1 ? M_tacklers_right.front().unum_
+                              : Unum_Unknown );
         }
 
-        // exist tackling player -> reset
-        if ( ! state->tacklers().empty() )
-        {
-            for ( const CoachPlayerObject * p : state->tacklers() )
-            {
-                if ( p->side() != last_kick.side_ )
-                {
-                    ActionEvent::ConstPtr action( new Tackle( last_kick.side_, last_kick.unum_,
-                                                              last_kick.time_, last_kick.mode_, last_kick.pos_,
-                                                              p->side(), p->unum(),
-                                                              prev_state->time(), prev_state->ball().pos() ) );
-                    M_action_events.push_back( action );
-                    break;
-                }
-            }
+        ActionEvent::ConstPtr event( new OutOfBounds( toucher.side_, toucher.unum_,
+                                                      M_touch_time, M_touch_mode, M_touched_ball_pos,
+                                                      current.time(), current.ball().pos() ) );
+        M_action_events.push_back( event );
 
-            last_kick.reset();
-            kicker_pos = Vector2D::INVALIDATED;
-            kicker_dash_count = 0;
-            continue;
-        }
-
-        // no kicking player
-        if ( state->kickers().empty() )
-        {
-            continue;
-        }
-
-        // multiple kickers -> reset last kicker
-        if ( state->kickers().size() >= 2 )
-        {
-            last_kick.reset();
-            kicker_pos = Vector2D::INVALIDATED;
-            kicker_dash_count = 0;
-            continue;
-        }
-
-        const CoachPlayerObject * kicker = state->kickers().front();
-
-        // same player kicks the ball
-        if ( last_kick.side_ == kicker->side()
-             && last_kick.unum_ == kicker->unum()
-             && kicker->dashCount() > kicker_dash_count )
-        {
-            // kicker performs dashes after the first kick.
-            ActionEvent::ConstPtr dribble( new Dribble( kicker->side(), kicker->unum(),
-                                                        last_kick.time_, last_kick.mode_, last_kick.pos_,
-                                                        prev_state->time(), prev_state->ball().pos() ) );
-            M_action_events.push_back( dribble );
-        }
-
-        // reset the last kick information
-        last_kick.reset();
-        kicker_dash_count = 0;
-
-        // set kicker
-        if ( ! last_kick.isValid() )
-        {
-            last_kick.assign( i - 1,
-                              kicker->side(),
-                              kicker->unum(),
-                              prev_state->time(),
-                              prev_state->gameMode(),
-                              prev_state->ball().pos(),
-                              ( state->ball().pos() - prev_state->ball().pos() ) );
-            const CoachPlayerObject * prev_kicker = prev_state->getPlayer( kicker->side(), kicker->unum() );
-            kicker_pos = ( prev_kicker
-                           ? prev_kicker->pos()
-                           : kicker->pos()  );
-            kicker_dash_count = kicker->dashCount();
-            continue;
-        }
+        // clear ball touch flags
+        clearBallTouchers();
     }
 }
 
 /*-------------------------------------------------------------------*/
-/*!
-
- */
-bool
-GameAnalyzer::print( const FieldModel & /*model*/ ) const
+void
+GameAnalyzer::updateBallToucher( const FieldModel & model,
+                                 const size_t frame_index )
 {
-    printActionEvents();
-    return true;
-}
-
-/*-------------------------------------------------------------------*/
-/*!
-
- */
-bool
-GameAnalyzer::printKickEvents( const FieldModel & model ) const
-{
-    const std::string team_l = model.leftTeamName();
-    const std::string team_r = model.rightTeamName();
-    const std::string unknown = "Unknown";
-
-    std::cout << "Type,"
-              << "TeamName,"
-              << "Side,"
-              << "Kicker,"
-              << "Time,"
-              << "X,"
-              << "Y,"
-              << "VelX,"
-              << "VelY"
-              << std::endl;
-    for ( const Kick::ConstPtr & k : M_single_kicks )
+    if ( frame_index < 1
+         || model.fieldStates().size() <= frame_index )
     {
-        const std::string team = ( k->side_ == LEFT ? team_l
-                                   : k->side_ == RIGHT ? team_r
-                                   : unknown );
-        std::cout << "Kick,"
-                  << team << ','
-                  << side_char( k->side_ ) << ','
-                  << k->unum_ << ','
-                  << k->time_.cycle() << ','
-                  << k->pos_.x << ','
-                  << k->pos_.y << ','
-                  << k->vel_.x << ','
-                  << k->vel_.y << ','
-                  << '\n';
+        return;
     }
 
-    return true;
-}
-
-/*-------------------------------------------------------------------*/
-bool
-GameAnalyzer::printActionEvents() const
-{
-    ActionEvent::print_header_csv( std::cout );
-
-    for ( const ActionEvent::ConstPtr & action : M_action_events )
+    FieldState::ConstPtr current = model.fieldStates()[ frame_index ];
+    if ( ! current )
     {
-        action->printCSV( std::cout );
+        return;
     }
 
-    return true;
+    if ( current->kickers().empty()
+         && current->tacklers().empty()
+         && current->catchers().empty() )
+    {
+        return;
+    }
+
+    FieldState::ConstPtr prev = model.fieldStates()[ frame_index - 1 ];
+    if ( ! prev )
+    {
+        return;
+    }
+
+    if ( current->gameMode().type() != GameMode::PlayOn
+         && current->gameMode().type() != GameMode::GoalKick_
+         && current->gameMode().type() == prev->gameMode().type()
+         && current->gameMode().side() == prev->gameMode().side() )
+    {
+        clearBallTouchers();
+        return;
+    }
+
+    clearBallTouchers();
+
+    M_touch_time = prev->time();
+    M_touch_mode = prev->gameMode();
+    M_touched_ball_pos = prev->ball().pos();
+
+    for ( const CoachPlayerObject * p : current->kickers() )
+    {
+        M_touchers.emplace_back( p );
+        M_kickers.emplace_back( p );
+        if ( p->side() == LEFT ) M_kickers_left.emplace_back( p );
+        else if ( p->side() == RIGHT ) M_kickers_right.emplace_back( p );
+    }
+
+    for ( const CoachPlayerObject * p : current->tacklers() )
+    {
+        M_touchers.emplace_back( p );
+        M_tacklers.emplace_back( p );
+        if ( p->side() == LEFT ) M_tacklers_left.emplace_back( p );
+        else if ( p->side() == RIGHT ) M_tacklers_right.emplace_back( p );
+    }
+
+    for ( const CoachPlayerObject * p : current->catchers() )
+    {
+        M_catchers.emplace_back( p );
+    }
 }
-
-// bool
-// GameAnalyzer::printShootEvents( const FieldModel & model ) const
-// {
-//     const std::string team_l = model.leftTeamName();
-//     const std::string team_r = model.rightTeamName();
-
-//     std::cout << "Type,"
-//               << "TeamName,"
-//               << "Side,"
-//               << "Kicker,"
-//               << "StartTime,"
-//               << "StartX,"
-//               << "StartY,"
-//               << "EndTime,"
-//               << "EndX,"
-//               << "EndY\n";
-//     for ( const ActionEvent::ConstPtr & ev : M_shoot_events )
-//     {
-//         std::cout << "Shoot,"
-//                   << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','
-//                   << side_char( ev->startPlayerSide() ) << ','
-//                   << ev->startPlayerUnum() << ','
-//                   << ev->startTime().cycle() << ','
-//                   << ev->startPos().x << ','
-//                   << ev->startPos().y << ','
-//                   << ev->endTime().cycle() << ','
-//                   << ev->endPos().x << ','
-//                   << ev->endPos().y << '\n';
-//     }
-
-//     std::cout << std::flush;
-
-//     return true;
-// }
-
-// bool
-// GameAnalyzer::printPassEvents( const FieldModel & model ) const
-// {
-//     const std::string team_l = model.leftTeamName();
-//     const std::string team_r = model.rightTeamName();
-
-//     for ( const ActionEvent::ConstPtr & ev : M_pass_events )
-//     {
-//         std::cout << "Pass,"
-//                   << ( ev->startPlayerSide() == LEFT ? team_l : team_r ) << ','
-//                   << side_char( ev->startPlayerSide() ) << ','
-//                   << ev->startPlayerUnum() << ','
-//                   << ev->startTime().cycle() << ','
-//                   << ev->startPos().x << ','
-//                   << ev->startPos().y << ','
-//                   << ev->endTime().cycle() << ','
-//                   << ev->endPos().x << ','
-//                   << ev->endPos().y << '\n';
-//     }
-
-//     return true;
-// }
