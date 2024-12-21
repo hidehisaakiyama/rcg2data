@@ -75,17 +75,22 @@ public:
 private:
     void clearBallTouchers();
 
+    void updateBallToucher( const FieldModel & model,
+                            const size_t frame_index );
+
+    // before updateBallToucher
     void analyzeSingleKick( const FieldState & prev,
                             const FieldState & current );
+    void analyzeSingleTackle( const FieldState & prev,
+                              const FieldState & current );
+    // void analyzeMultiTouch( const FieldState & prev,
+    //                        const FieldState & current );
+
+    // after updateBallToucher
     void analyzeGoal( const FieldState & prev,
                       const FieldState & current );
     void analyzeOutOfBounds( const FieldState & prev,
                              const FieldState & current );
-    // void analyzeMultiKick( const FieldState & prev,
-    //                        const FieldState & current );
-
-    void updateBallToucher( const FieldModel & model,
-                            const size_t frame_index );
 };
 
 #endif
