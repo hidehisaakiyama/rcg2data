@@ -20,7 +20,6 @@ target_include_directories(rcg2data
 
 target_link_libraries(rcg2data
   ${LIBRCSC_LIB}
-  Boost::system
   ZLIB::ZLIB
   )
 
