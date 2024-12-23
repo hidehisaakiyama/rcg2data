@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.61)
-AC_INIT([rcg2data], [2022.11], [hidehisaakiyama@users.noreply.github.com])
+AC_PREREQ([2.61])
+AC_INIT([rcg2data], [2024.12], [hidehisaakiyama@users.noreply.github.com])
 
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
@@ -30,12 +30,12 @@ AC_PROG_MAKE_SET
 # ----------------------------------------------------------
 # check C++
 
-AX_CXX_COMPILE_STDCXX_14(noext)
+AX_CXX_COMPILE_STDCXX_17(noext)
 
 # ----------------------------------------------------------
 # check boost
 AX_BOOST_BASE([1.38.0])
-AX_BOOST_SYSTEM
+#AX_BOOST_SYSTEM
 CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
 LIBS="$LIBS $BOOST_SYSTEM_LIB"
@@ -82,7 +82,7 @@ AC_TYPE_SSIZE_T
 AC_TYPE_UINT32_T
 
 # Checks for library functions.
-AC_HEADER_STDC
+#AC_HEADER_STDC
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])

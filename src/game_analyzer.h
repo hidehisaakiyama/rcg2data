@@ -33,70 +33,66 @@
 class GameAnalyzer {
 private:
 
-    struct Kick {
-        using Ptr = std::shared_ptr< Kick >;
-        using ConstPtr = std::shared_ptr< const Kick >;
-
-        size_t index_; // index of the states
+    struct Player {
         rcsc::SideID side_;
         int unum_;
-        rcsc::GameTime time_;
-        rcsc::GameMode mode_;
-        rcsc::Vector2D pos_;
-        rcsc::Vector2D vel_;
+        int dash_count_;
 
-        Kick( size_t index,
-              const rcsc::SideID side,
-              const int unum,
-              const rcsc::GameTime & time,
-              const rcsc::GameMode & mode,
-              const rcsc::Vector2D & pos,
-              const rcsc::Vector2D & vel )
-            : index_( index ),
-              side_( side ),
-              unum_( unum ),
-              time_( time ),
-              mode_( mode ),
-              pos_( pos ),
-              vel_( vel )
+        Player()
+            : side_( rcsc::NEUTRAL ),
+              unum_( rcsc::Unum_Unknown ),
+              dash_count_( 0 )
+        { }
+
+        explicit Player( const rcsc::CoachPlayerObject * p )
+            : side_( p->side() ),
+              unum_( p->unum() ),
+              dash_count_( p->dashCount() )
         { }
     };
 
-    struct KickSequence {
-        using Ptr = std::shared_ptr< KickSequence >;
-
-        rcsc::SideID side_;
-        std::vector< Kick::ConstPtr > kicks_;
-    };
-
-    std::vector< Kick::ConstPtr > M_single_kicks;
-
-    std::vector< KickSequence::Ptr > M_kick_sequences;
-
     std::vector< ActionEvent::ConstPtr > M_action_events;
 
-    // std::vector< ActionEvent::ConstPtr > M_shoot_events;
-    // std::vector< ActionEvent::ConstPtr > M_pass_events;
-    // std::vector< ActionEvent::ConstPtr > M_interception_events;
+    rcsc::GameTime M_touch_time;
+    rcsc::GameMode M_touch_mode;
+    rcsc::Vector2D M_touched_ball_pos;
+    std::vector< Player > M_touchers; // kick or tackle players
+    std::vector< Player > M_kickers;
+    std::vector< Player > M_kickers_left;
+    std::vector< Player > M_kickers_right;
+    std::vector< Player > M_tacklers;
+    std::vector< Player > M_tacklers_left;
+    std::vector< Player > M_tacklers_right;
+    std::vector< Player > M_catchers;
 
 public:
     GameAnalyzer();
 
     bool analyze( const FieldModel & model );
 
-    bool print( const FieldModel & model ) const;
+    std::ostream & print( std::ostream & os ) const;
 
 private:
-    void extractKickEvent( const FieldModel & model,
-                           const size_t idx );
+    void clearBallTouchers();
 
-    void extractShootEvent( const FieldModel & model );
-    void extractPassEvent( const FieldModel & model );
-    void extractPassEventSimple( const FieldModel & model );
-    void extractPassEventByKick( const FieldModel & model );
+    void updateBallToucher( const FieldModel & model,
+                            const size_t frame_index );
 
-    bool printKickEvents( const FieldModel & model ) const;
-    bool printActionEvents() const;
+    // before updateBallToucher
+    void analyzeSingleKick( const FieldState & prev,
+                            const FieldState & current );
+    void analyzeSingleTackle( const FieldState & prev,
+                              const FieldState & current );
+    void analyzeMultiTouch( const FieldState & prev,
+                            const FieldState & current );
+    rcsc::SideID getToucherSide( const FieldState & state );
+    bool checkBeginKickerTouch( const FieldState & state );
+
+    // after updateBallToucher
+    void analyzeGoal( const FieldState & prev,
+                      const FieldState & current );
+    void analyzeOutOfBounds( const FieldState & prev,
+                             const FieldState & current );
 };
 
 #endif

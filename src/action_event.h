@@ -29,6 +29,7 @@
 
 #include <rcsc/geom/vector_2d.h>
 #include <rcsc/game_time.h>
+#include <rcsc/game_mode.h>
 #include <rcsc/types.h>
 
 #include <memory>
@@ -40,7 +41,7 @@ public:
     using ConstPtr = std::shared_ptr< const ActionEvent >;
 
     // Action types defined in SPADL
-    // https://socceraction.readthedocs.io/en/latest/documentation/SPADL_definitions.html
+    // https://socceraction.readthedocs.io/en/latest/documentation/spadl/SPADL_definitions.htlm
     enum Type {
         Pass,
         Cross,
@@ -64,6 +65,11 @@ public:
         BallTouch, // Player makes a bad touch and loses the ball
         Dribble, // Player dribbles at least 3 meters with the ball
         GoalKick,
+
+        // original types
+        OwnGoal,
+        OutOfBounds, // Players kick/tackle the ball out of bounds
+        MultiTouch, // Multiple players touched the ball simultaneously, and it resulted in a loose ball.
         None,
     };
 
@@ -71,11 +77,12 @@ private:
 
     Type M_action_type;
 
-    rcsc::SideID M_start_player_side;
-    int M_start_player_unum;
+    rcsc::SideID M_begin_player_side;
+    int M_begin_player_unum;
 
-    rcsc::GameTime M_start_time;
-    rcsc::Vector2D M_start_pos;
+    rcsc::GameTime M_begin_time;
+    rcsc::GameMode M_begin_mode;
+    rcsc::Vector2D M_begin_pos;
 
     rcsc::SideID M_end_player_side;
     int M_end_player_unum;
@@ -90,10 +97,11 @@ private:
 protected:
 
     ActionEvent( const Type action_type,
-                 const rcsc::SideID start_player_side,
-                 const int start_player_unum,
-                 const rcsc::GameTime & start_time,
-                 const rcsc::Vector2D & start_pos,
+                 const rcsc::SideID begin_player_side,
+                 const int begin_player_unum,
+                 const rcsc::GameTime & begin_time,
+                 const rcsc::GameMode & begin_mode,
+                 const rcsc::Vector2D & begin_pos,
                  const rcsc::SideID end_player_side,
                  const int end_player_unum,
                  const rcsc::GameTime & end_time,
@@ -103,10 +111,11 @@ protected:
 public:
 
     Type actionType() const { return M_action_type; }
-    rcsc::SideID startPlayerSide() const { return M_start_player_side; }
-    int startPlayerUnum() const { return M_start_player_unum; }
-    const rcsc::GameTime & startTime() const { return M_start_time; }
-    const rcsc::Vector2D & startPos() const { return M_start_pos; }
+    rcsc::SideID beginPlayerSide() const { return M_begin_player_side; }
+    int beginPlayerUnum() const { return M_begin_player_unum; }
+    const rcsc::GameTime & beginTime() const { return M_begin_time; }
+    const rcsc::GameMode & beginMode() const { return M_begin_mode; }
+    const rcsc::Vector2D & beginPos() const { return M_begin_pos; }
     rcsc::SideID endPlayerSide() const { return M_end_player_side; }
     int endPlayerUnum() const { return M_end_player_unum; }
     const rcsc::GameTime & endTime() const { return M_end_time; }
@@ -135,13 +144,34 @@ public:
 
     Shoot( const rcsc::SideID kicker_side,
            const int kicker_unum,
-           const rcsc::GameTime & start_time,
-           const rcsc::Vector2D & start_pos,
+           const rcsc::GameTime & begin_time,
+           const rcsc::GameMode & begin_mode,
+           const rcsc::Vector2D & begin_pos,
            const rcsc::GameTime & end_time,
-           const rcsc::Vector2D & end_pos,
-           const bool success );
+           const rcsc::Vector2D & end_pos );
 
-    const char * actionName() const;
+    const char * actionName() const override;
+};
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class OwnGoal
+    : public ActionEvent {
+private:
+
+public:
+
+    OwnGoal( const rcsc::SideID kicker_side,
+             const int kicker_unum,
+             const rcsc::GameTime & begin_time,
+             const rcsc::GameMode & begin_mode,
+             const rcsc::Vector2D & begin_pos,
+             const rcsc::GameTime & end_time,
+             const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const override;
 };
 
 
@@ -157,18 +187,66 @@ public:
 
     Pass( const rcsc::SideID kicker_side,
           const int kicker_unum,
-          const rcsc::GameTime & start_time,
-          const rcsc::Vector2D & start_pos,
+          const rcsc::GameTime & begin_time,
+          const rcsc::GameMode & begin_mode,
+          const rcsc::Vector2D & begin_pos,
           const rcsc::SideID receiver_side,
           const int receiver_unum,
           const rcsc::GameTime & end_time,
           const rcsc::Vector2D & end_pos,
           const bool success );
 
-    const char * actionName() const;
+    const char * actionName() const override;
 
 };
 
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class Tackle
+    : public ActionEvent {
+private:
+
+public:
+
+    Tackle( const rcsc::SideID begin_ball_holder_side,
+            const int begin_ball_holder_unum,
+            const rcsc::GameTime & begin_time,
+            const rcsc::GameMode & begin_mode,
+            const rcsc::Vector2D & begin_pos,
+            const rcsc::SideID tackler_side,
+            const int tackler_unum,
+            const rcsc::GameTime & end_time,
+            const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const override;
+
+};
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class Foul
+    : public ActionEvent {
+private:
+
+public:
+
+    Foul( const rcsc::SideID begin_ball_holder_side,
+          const int begin_ball_holder_unum,
+          const rcsc::GameTime & begin_time,
+          const rcsc::GameMode & begin_mode,
+          const rcsc::Vector2D & begin_pos,
+          const rcsc::SideID tackler_side,
+          const int tackler_unum,
+          const rcsc::GameTime & end_time,
+          const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const override;
+
+};
 
 /*-------------------------------------------------------------------*/
 /*-------------------------------------------------------------------*/
@@ -182,16 +260,147 @@ public:
 
     Interception( const rcsc::SideID kicker_side,
                   const int kicker_unum,
-                  const rcsc::GameTime & start_time,
-                  const rcsc::Vector2D & start_pos,
+                  const rcsc::GameTime & begin_time,
+                  const rcsc::GameMode & begin_mode,
+                  const rcsc::Vector2D & begin_pos,
                   const rcsc::SideID receiver_side,
                   const int receiver_unum,
                   const rcsc::GameTime & end_time,
                   const rcsc::Vector2D & end_pos );
 
-    const char * actionName() const;
+    const char * actionName() const override;
 
 };
 
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class KeeperSave
+    : public ActionEvent {
+private:
+
+public:
+
+    KeeperSave( const rcsc::SideID begin_ball_holder_side,
+                const int begin_ball_holder_unum,
+                const rcsc::GameTime & begin_time,
+                const rcsc::GameMode & begin_mode,
+                const rcsc::Vector2D & begin_pos,
+                const rcsc::SideID keeper_side,
+                const int keeper_unum,
+                const rcsc::GameTime & end_time,
+                const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const override;
+
+};
+
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class BallTouch
+    : public ActionEvent {
+private:
+
+public:
+
+    BallTouch( const rcsc::SideID player_side,
+               const int player_unum,
+               const rcsc::GameTime & begin_time,
+               const rcsc::GameMode & begin_mode,
+               const rcsc::Vector2D & begin_pos,
+               const rcsc::GameTime & end_time,
+               const rcsc::Vector2D & end_pos );
+
+    BallTouch( const rcsc::SideID player_side,
+               const int player_unum,
+               const rcsc::GameTime & begin_time,
+               const rcsc::GameMode & begin_mode,
+               const rcsc::Vector2D & begin_pos,
+               const rcsc::SideID end_player_side,
+               const int end_player_unum,
+               const rcsc::GameTime & end_time,
+               const rcsc::Vector2D & end_pos );
+
+
+    const char * actionName() const override;
+
+};
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+
+class Dribble
+    : public ActionEvent {
+private:
+
+public:
+
+    Dribble( const rcsc::SideID kicker_side,
+             const int kicker_unum,
+             const rcsc::GameTime & begin_time,
+             const rcsc::GameMode & begin_mode,
+             const rcsc::Vector2D & begin_pos,
+             const rcsc::GameTime & end_time,
+             const rcsc::Vector2D & end_pos,
+             const bool success );
+
+    const char * actionName() const override;
+
+};
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+class OutOfBounds
+    : public ActionEvent {
+private:
+
+public:
+
+    OutOfBounds( const rcsc::SideID kicker_side,
+                 const int kicker_unum,
+                 const rcsc::GameTime & begin_time,
+                 const rcsc::GameMode & begin_mode,
+                 const rcsc::Vector2D & begin_pos,
+                 const rcsc::GameTime & end_time,
+                 const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const override;
+};
+
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+class MultiTouch
+    : public ActionEvent {
+private:
+
+public:
+
+    MultiTouch( const rcsc::SideID kicker_side,
+                const int kicker_unum,
+                const rcsc::GameTime & begin_time,
+                const rcsc::GameMode & begin_mode,
+                const rcsc::Vector2D & begin_pos,
+                const rcsc::GameTime & end_time,
+                const rcsc::Vector2D & end_pos );
+
+    MultiTouch( const rcsc::SideID kicker_side,
+                const int kicker_unum,
+                const rcsc::GameTime & begin_time,
+                const rcsc::GameMode & begin_mode,
+                const rcsc::Vector2D & begin_pos,
+                const rcsc::SideID end_side,
+                const rcsc::GameTime & end_time,
+                const rcsc::Vector2D & end_pos );
+
+    const char * actionName() const override;
+};
 
 #endif

@@ -61,9 +61,10 @@ RCGReader::handleLogVersion( const int ver )
 {
     Handler::handleLogVersion( ver );
 
-    if ( logVersion() <= 3 )
+    if ( logVersion() != REC_VERSION_JSON
+         && logVersion() <= REC_VERSION_3 )
     {
-        std::cerr << "Unsupported RCG version [" << ver << ']' << std::endl;
+        std::cerr << "Unsupported RCG version [" << logVersion() << ']' << std::endl;
         return false;
     }
 
@@ -152,12 +153,9 @@ RCGReader::handleTeam( const int ,
 
  */
 bool
-RCGReader::handleServerParam( const std::string & msg )
+RCGReader::handleServerParam( const ServerParamT & param )
 {
-    if ( ! ServerParam::instance().parse( msg.c_str(), 999 ) )
-    {
-        return false;
-    }
+    ServerParam::instance().convertFrom( param );
 
     return true;
 }
@@ -167,25 +165,18 @@ RCGReader::handleServerParam( const std::string & msg )
 
  */
 bool
-RCGReader::handlePlayerParam( const std::string & msg )
+RCGReader::handlePlayerParam( const PlayerParamT & param )
 {
-    if ( ! PlayerParam::instance().parse( msg.c_str(), 999 ) )
-    {
-        return false;
-    }
+    PlayerParam::instance().convertFrom( param );
 
     return true;
 }
 
-
 /*-------------------------------------------------------------------*/
-/*!
-
- */
 bool
-RCGReader::handlePlayerType( const std::string & msg )
+RCGReader::handlePlayerType( const PlayerTypeT & param )
 {
-    const PlayerType ptype( msg.c_str(), 999 );
+    const PlayerType ptype( param );
 
     if ( ptype.id() < 0
          || ptype.id() >= PlayerParam::i().playerTypes() )
@@ -195,5 +186,15 @@ RCGReader::handlePlayerType( const std::string & msg )
 
     PlayerTypeSet::instance().insert( ptype );
 
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+bool
+RCGReader::handleTeamGraphic( const char ,
+                              const int ,
+                              const int ,
+                              const std::vector< std::string > & )
+{
     return true;
 }
